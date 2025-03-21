@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useImmer } from "use-immer";
-// import api from "@/api";
 import { parseSSEStream } from "../utils.tsx";
+import api from "../utils.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatInput from "./ChatInput.tsx";
 
 const Chatbot = () => {
-  const [chatId, setChatId] = useState(null);
+  const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer([]);
   const [newMessage, setNewMessage] = useState("");
 
@@ -21,6 +21,7 @@ const Chatbot = () => {
       { role: "user", content: trimmedMessage },
       { role: "assistant", content: "", sources: [], loading: true },
     ]);
+
     setNewMessage("");
 
     let chatIdOrNew = chatId;
@@ -29,6 +30,10 @@ const Chatbot = () => {
         const { id } = await api.createChat();
         setChatId(id);
         chatIdOrNew = id;
+      }
+
+      if (!chatIdOrNew) {
+        throw new Error("Chat ID is not available");
       }
 
       const stream = await api.sendChatMessage(chatIdOrNew, trimmedMessage);
