@@ -10,7 +10,7 @@
   "assets": {
     "not_found_handling": "single-page-application",
     "binding": "ASSETS",
-    "directory": "/assets"
+    "directory": "./public/"
   },
   "observability": {
     "enabled": true
