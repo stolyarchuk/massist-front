@@ -1,5 +1,5 @@
 import useAutosize from "../hooks/useAutosize.tsx";
-import sendIcon from "./assets/images/send.svg";
+import sendIcon from "../assets/images/send.svg";
 
 const ChatInput = ({
   newMessage,

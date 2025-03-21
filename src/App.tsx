@@ -1,5 +1,5 @@
 import Chatbot from "./components/Chatbot.tsx";
-import logo from ".logo.svg";
+import logo from "./assets/images/logo.svg";
 
 function App() {
   return (

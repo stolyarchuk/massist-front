@@ -1,8 +1,8 @@
 import Markdown from "react-markdown";
 import useAutoScroll from "../hooks/useAutoScroll.tsx";
 import Spinner from "./Spinner.tsx";
-import userIcon from "@/assets/images/user.svg";
-import errorIcon from "@/assets/images/error.svg";
+import userIcon from "../assets/images/user.svg";
+import errorIcon from "../assets/images/error.svg";
 
 interface Message {
   role: "user" | "assistant";
