@@ -1,14 +1,21 @@
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
-export async function* parseSSEStream(stream) {
+export async function* parseSSEStream(stream: ReadableStream) {
   const sseStream = stream
     .pipeThrough(new TextDecoderStream())
     .pipeThrough(new EventSourceParserStream());
 
-  for await (const chunk of sseStream) {
-    if (chunk.type === "event") {
-      yield chunk.data;
+  const reader = sseStream.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value.type === "event") {
+        yield value.data;
+      }
     }
+  } finally {
+    reader.releaseLock();
   }
 }
 

@@ -37,10 +37,12 @@ const Chatbot = () => {
       }
 
       const stream = await api.sendChatMessage(chatIdOrNew, trimmedMessage);
-      for await (const textChunk of parseSSEStream(stream)) {
-        setMessages((draft) => {
-          draft[draft.length - 1].content += textChunk;
-        });
+      if (stream) {
+        for await (const textChunk of parseSSEStream(stream)) {
+          setMessages((draft) => {
+            draft[draft.length - 1].content += textChunk;
+          });
+        }
       }
       setMessages((draft) => {
         draft[draft.length - 1].loading = false;
