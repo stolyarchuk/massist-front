@@ -1,3 +1,9 @@
+interface Env {
+  ASSETS: {
+    fetch(request: Request): Promise<Response>;
+  };
+}
+
 export default {
   fetch(request, env) {
     const url = new URL(request.url);
