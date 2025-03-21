@@ -5,17 +5,9 @@ import { parseSSEStream } from "../utils.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatInput from "./ChatInput.tsx";
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-  sources?: any[];
-  loading?: boolean;
-  const isLoading = messages.length > 0 && messages[messages.length - 1].loading;
-}
-
 const Chatbot = () => {
-  const [chatId, setChatId] = useState<string | null>(null);
-  const [messages, setMessages] = useImmer<ChatMessage[]>([]);
+  const [chatId, setChatId] = useState(null);
+  const [messages, setMessages] = useImmer([]);
   const [newMessage, setNewMessage] = useState("");
 
   const isLoading = messages.length && messages[messages.length - 1].loading;
