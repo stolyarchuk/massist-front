@@ -1,16 +1,23 @@
 import useAutosize from "../hooks/useAutosize.tsx";
 import sendIcon from "../assets/images/send.svg";
 
+interface ChatInputProps {
+  newMessage: string;
+  isLoading: boolean;
+  setNewMessage: (message: string) => void;
+  submitNewMessage: () => void;
+}
+
 const ChatInput = ({
   newMessage,
   isLoading,
   setNewMessage,
   submitNewMessage,
-}) => {
-  const textareaRef = useAutosize(newMessage);
+}: ChatInputProps) => {
+  const textareaRef = useAutosize({ value: newMessage });
 
-  function handleKeyDown(e) {
-    if (e.keyCode === 13 && !e.shiftKey && !isLoading) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey && !isLoading) {
       e.preventDefault();
       submitNewMessage();
     }

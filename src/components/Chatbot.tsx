@@ -1,75 +1,151 @@
-import { useState } from "react";
-import { useImmer } from "use-immer";
-import { parseSSEStream } from "../utils.tsx";
-import api from "../utils.tsx";
-import ChatMessages from "./ChatMessages.tsx";
+import React, { useState, useEffect, useRef } from "react";
 import ChatInput from "./ChatInput.tsx";
+import Message from "./Message.tsx";
+import { api } from "../../api";
+import { parseSSEStream } from "../utils";
 
-const Chatbot = () => {
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const Chatbot: React.FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
-  const [messages, setMessages] = useImmer([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  const isLoading = messages.length && messages[messages.length - 1].loading;
+  // Initialize chat on component mount
+  useEffect(() => {
+    initializeChat();
+  }, []);
 
-  async function submitNewMessage() {
-    const trimmedMessage = newMessage.trim();
-    if (!trimmedMessage || isLoading) return;
+  // Auto-scroll to bottom when messages update
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-    setMessages((draft) => [
-      ...draft,
-      { role: "user", content: trimmedMessage },
-      { role: "assistant", content: "", sources: [], loading: true },
-    ]);
+  const initializeChat = async () => {
+    setIsLoading(true);
+    setError(null);
 
-    setNewMessage("");
-
-    let chatIdOrNew = chatId;
     try {
-      if (!chatId) {
-        const { id } = await api.createChat();
-        setChatId(id);
-        chatIdOrNew = id;
-      }
+      const chatData = await api.createChat();
+      setChatId(chatData.chat_id);
 
-      if (!chatIdOrNew) {
-        throw new Error("Chat ID is not available");
+      if (chatData.initial_message) {
+        setMessages([
+          {
+            content: chatData.initial_message,
+            role: "assistant",
+          },
+        ]);
       }
-
-      const stream = await api.sendChatMessage(chatIdOrNew, trimmedMessage);
-      if (stream) {
-        for await (const textChunk of parseSSEStream(stream)) {
-          setMessages((draft) => {
-            draft[draft.length - 1].content += textChunk;
-          });
-        }
-      }
-      setMessages((draft) => {
-        draft[draft.length - 1].loading = false;
-      });
     } catch (err) {
-      console.log(err);
-      setMessages((draft) => {
-        draft[draft.length - 1].loading = false;
-        draft[draft.length - 1].error = true;
-      });
+      console.error("Failed to initialize chat:", err);
+      setError("Failed to initialize chat. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
+
+  const addMessage = (role: "user" | "assistant", content: string) => {
+    setMessages((prev) => [...prev, { role, content }]);
+  };
+
+  const updateLastAssistantMessage = (content: string) => {
+    setMessages((prev) => {
+      // Clone the messages array
+      const updatedMessages = [...prev];
+
+      // Find the last assistant message, if it exists
+      const lastAssistantIndex = updatedMessages.findIndex(
+        (msg) => msg.role === "assistant"
+      );
+
+      // If found, update it; otherwise add a new message
+      if (lastAssistantIndex !== -1) {
+        updatedMessages[lastAssistantIndex] = {
+          ...updatedMessages[lastAssistantIndex],
+          content,
+        };
+      } else {
+        updatedMessages.push({ role: "assistant", content });
+      }
+
+      return updatedMessages;
+    });
+  };
+
+  const submitNewMessage = async () => {
+    if (!newMessage.trim() || isLoading) return;
+
+    const trimmedMessage = newMessage.trim();
+
+    // Clear input and add user message
+    setNewMessage("");
+    addMessage("user", trimmedMessage);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Send message to API
+      const responseStream = await api.sendChatMessage(
+        chatId || "new",
+        trimmedMessage
+      );
+
+      if (!responseStream) {
+        throw new Error("No response stream received");
+      }
+
+      // Handle streaming response
+      if (responseStream instanceof ReadableStream) {
+        // Add initial empty assistant message that will be updated
+        addMessage("assistant", "");
+
+        let fullResponse = "";
+
+        // Process each chunk from the stream
+        for await (const chunk of parseSSEStream(responseStream)) {
+          fullResponse += chunk;
+          updateLastAssistantMessage(fullResponse);
+        }
+      } else {
+        throw new Error("Expected a ReadableStream response");
+      }
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      setError("Failed to send message. Please try again.");
+      addMessage("assistant", "Error generating response.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="relative grow flex flex-col gap-6 pt-6">
-      {messages.length === 0 && (
-        <div className="mt-3 font-urbanist text-primary-blue text-xl font-light space-y-2">
-          <p>👋 Welcome!</p>
-          <p>
-            I am powered by the latest technology reports from leading
-            institutions like the World Bank, the World Economic Forum,
-            McKinsey, Deloitte and the OECD.
-          </p>
-          <p>Ask me anything about the latest technology trends.</p>
-        </div>
-      )}
-      <ChatMessages messages={messages} isLoading={isLoading} />
+    <div className="flex flex-col h-screen">
+      <div className="flex-grow overflow-y-auto px-4 py-2">
+        {messages.map((message, index) => (
+          <Message key={index} content={message.content} role={message.role} />
+        ))}
+
+        {isLoading &&
+          !messages.some((m) => m.role === "assistant" && m.content === "") && (
+            <Message content="Thinking..." role="assistant" />
+          )}
+
+        {error && (
+          <div className="text-red-500 mt-2 px-3 py-2 rounded bg-red-50">
+            {error}
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
       <ChatInput
         newMessage={newMessage}
         isLoading={isLoading}
