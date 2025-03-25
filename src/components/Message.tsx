@@ -1,7 +1,7 @@
 import React from "react";
 import Markdown from "react-markdown";
 import userIcon from "../assets/images/user.svg";
-import assistantIcon from "../assets/images/user.svg";
+import assistantIcon from "../assets/react.svg";
 
 interface MessageProps {
   role: "user" | "assistant";

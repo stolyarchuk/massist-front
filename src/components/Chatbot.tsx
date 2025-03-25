@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import ChatInput from "./ChatInput.tsx";
 import Message from "./Message.tsx";
-import { api } from "../../api";
-import { parseSSEStream } from "../utils";
+// import { api } from "../../api";
+import api, { parseSSEStream } from "../utils";
 
 interface ChatMessage {
   role: "user" | "assistant";
+  event: "RunCompleted" | "RunResponse" | "RunStarted";
   content: string;
 }
 
@@ -40,6 +41,7 @@ const Chatbot: React.FC = () => {
           {
             content: chatData.initial_message,
             role: "assistant",
+            event: "RunResponse",
           },
         ]);
       }
@@ -52,7 +54,7 @@ const Chatbot: React.FC = () => {
   };
 
   const addMessage = (role: "user" | "assistant", content: string) => {
-    setMessages((prev) => [...prev, { role, content }]);
+    setMessages((prev) => [...prev, { role, event: "RunResponse", content }]);
   };
 
   const updateLastAssistantMessage = (content: string) => {
@@ -65,6 +67,14 @@ const Chatbot: React.FC = () => {
         (msg) => msg.role === "assistant"
       );
 
+      const onlyResponses = updatedMessages.findIndex(
+        (msg) => msg.event === "RunResponse"
+      );
+
+      console.log(updatedMessages);
+
+      if (onlyResponses != 0) return updatedMessages;
+
       // If found, update it; otherwise add a new message
       if (lastAssistantIndex !== -1) {
         updatedMessages[lastAssistantIndex] = {
@@ -72,9 +82,12 @@ const Chatbot: React.FC = () => {
           content,
         };
       } else {
-        updatedMessages.push({ role: "assistant", content });
+        updatedMessages.push({
+          role: "assistant",
+          event: "RunResponse",
+          content,
+        });
       }
-
       return updatedMessages;
     });
   };
@@ -110,8 +123,25 @@ const Chatbot: React.FC = () => {
 
         // Process each chunk from the stream
         for await (const chunk of parseSSEStream(responseStream)) {
-          fullResponse += chunk;
-          updateLastAssistantMessage(fullResponse);
+          try {
+            // Parse the chunk as JSON
+            const jsonChunk =
+              typeof chunk === "string" ? JSON.parse(chunk) : chunk;
+            console.log("JSON chunk:", jsonChunk);
+
+            // Extract content from the JSON object
+            const content = jsonChunk.content || jsonChunk.data?.content || "";
+
+            if (content) {
+              fullResponse += content;
+              updateLastAssistantMessage(fullResponse);
+            }
+          } catch (error) {
+            console.error("Error parsing chunk as JSON:", error, chunk);
+            // Fallback to treating it as a plain string if JSON parsing fails
+            fullResponse += String(chunk);
+            updateLastAssistantMessage(fullResponse);
+          }
         }
       } else {
         throw new Error("Expected a ReadableStream response");
