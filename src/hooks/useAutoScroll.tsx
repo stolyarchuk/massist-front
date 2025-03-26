@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 const SCROLL_THRESHOLD = 10;
 
-const useAutoScroll = (active) => {
+const useAutoScroll = (active: boolean) => {
   const scrollContentRef = useRef(null);
   const isDisabled = useRef(false);
   const prevScrollTop = useRef<number | null>(null);

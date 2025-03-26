@@ -1,4 +1,5 @@
 import { EventSourceParserStream } from "eventsource-parser/stream";
+import { api } from "../api";
 
 export async function* parseSSEStream(stream: ReadableStream) {
   const sseStream = stream
@@ -19,18 +20,5 @@ export async function* parseSSEStream(stream: ReadableStream) {
   }
 }
 
-const api = {
-  createChat: async () => {
-    const response = await fetch("/api/chat", { method: "POST" });
-    return await response.json();
-  },
-  sendChatMessage: async (chatIdOrNew: string, trimmedMessage: string) => {
-    const response = await fetch(`/api/chat/${chatIdOrNew}`, {
-      method: "POST",
-      body: JSON.stringify({ message: trimmedMessage }),
-    });
-    return response.body;
-  },
-};
-
+// Export the API client from the api/index.ts file
 export default api;

@@ -1,75 +1,216 @@
-import { useState } from "react";
-import { useImmer } from "use-immer";
-import { parseSSEStream } from "../utils.tsx";
-import api from "../utils.tsx";
-import ChatMessages from "./ChatMessages.tsx";
+import React, { useState, useEffect, useRef } from "react";
 import ChatInput from "./ChatInput.tsx";
+import ChatMessages from "./ChatMessages.tsx";
+import ChatError from "./ChatError.tsx";
+import api, { parseSSEStream } from "../utils";
 
-const Chatbot = () => {
-  const [chatId, setChatId] = useState<string | null>(null);
-  const [messages, setMessages] = useImmer([]);
-  const [newMessage, setNewMessage] = useState("");
+// Cookie utility functions
+const setChatIdCookie = (chatId: string) => {
+  document.cookie = `chat_id=${chatId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days expiry
+};
 
-  const isLoading = messages.length && messages[messages.length - 1].loading;
-
-  async function submitNewMessage() {
-    const trimmedMessage = newMessage.trim();
-    if (!trimmedMessage || isLoading) return;
-
-    setMessages((draft) => [
-      ...draft,
-      { role: "user", content: trimmedMessage },
-      { role: "assistant", content: "", sources: [], loading: true },
-    ]);
-
-    setNewMessage("");
-
-    let chatIdOrNew = chatId;
-    try {
-      if (!chatId) {
-        const { id } = await api.createChat();
-        setChatId(id);
-        chatIdOrNew = id;
-      }
-
-      if (!chatIdOrNew) {
-        throw new Error("Chat ID is not available");
-      }
-
-      const stream = await api.sendChatMessage(chatIdOrNew, trimmedMessage);
-      if (stream) {
-        for await (const textChunk of parseSSEStream(stream)) {
-          setMessages((draft) => {
-            draft[draft.length - 1].content += textChunk;
-          });
-        }
-      }
-      setMessages((draft) => {
-        draft[draft.length - 1].loading = false;
-      });
-    } catch (err) {
-      console.log(err);
-      setMessages((draft) => {
-        draft[draft.length - 1].loading = false;
-        draft[draft.length - 1].error = true;
-      });
+const getChatIdFromCookie = () => {
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split("=");
+    if (name === "chat_id") {
+      return value;
     }
   }
+  return null;
+};
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const Chatbot: React.FC = () => {
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Initialize chat on component mount
+  useEffect(() => {
+    const storedChatId = getChatIdFromCookie();
+    if (storedChatId) {
+      setChatId(storedChatId);
+      fetchPreviousMessages(storedChatId);
+    } else {
+      initializeChat();
+    }
+  }, []);
+
+  // Auto-scroll to bottom when messages update
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const initializeChat = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const chatData = await api.createChat();
+      setChatId(chatData.chat_id);
+      setChatIdCookie(chatData.chat_id);
+
+      if (chatData.initial_message) {
+        setMessages([
+          {
+            content: chatData.initial_message,
+            role: "assistant",
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error("Failed to initialize chat:", err);
+      setError("Failed to initialize chat. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchPreviousMessages = async (chatId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/messages?chat_id=${chatId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error("Error fetching previous messages:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addMessage = (role: "user" | "assistant", content: string) => {
+    setMessages((prev) => [...prev, { role, event: "RunResponse", content }]);
+  };
+
+  const updateLastAssistantMessage = (content: string) => {
+    setMessages((prev) => {
+      // Clone the messages array
+      const updatedMessages = [...prev];
+
+      // Find the last assistant message, if it exists
+      const lastAssistantIndex = updatedMessages.findIndex(
+        (msg) => msg.role === "assistant"
+      );
+
+      // const onlyResponses = updatedMessages.findIndex(
+      //   (msg) => msg.event === "RunResponse"
+      // );
+
+      console.log(updatedMessages);
+
+      // if (onlyResponses != 0) return updatedMessages;
+
+      // If found, update it; otherwise add a new message
+      if (lastAssistantIndex !== -1) {
+        updatedMessages[lastAssistantIndex] = {
+          ...updatedMessages[lastAssistantIndex],
+          content,
+        };
+      } else {
+        updatedMessages.push({
+          role: "assistant",
+          content,
+        });
+      }
+      return updatedMessages;
+    });
+  };
+
+  const submitNewMessage = async () => {
+    if (!newMessage.trim() || isLoading) return;
+
+    const trimmedMessage = newMessage.trim();
+
+    // Clear input and add user message
+    setNewMessage("");
+    addMessage("user", trimmedMessage);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Send message to API
+      const responseStream = await api.sendChatMessage(
+        chatId || "new",
+        trimmedMessage
+      );
+
+      if (!responseStream) {
+        throw new Error("No response stream received");
+      }
+
+      // Handle streaming response
+      if (responseStream instanceof ReadableStream) {
+        // Add initial empty assistant message that will be updated
+        addMessage("assistant", "");
+
+        let fullResponse = "";
+
+        // Process each chunk from the stream
+        for await (const chunk of parseSSEStream(responseStream)) {
+          try {
+            // Parse the chunk as JSON
+            const jsonChunk =
+              typeof chunk === "string" ? JSON.parse(chunk) : chunk;
+            console.log("JSON chunk:", jsonChunk);
+
+            // Extract content from the JSON object
+            const content = jsonChunk.content || jsonChunk.data?.content || "";
+
+            if (content) {
+              fullResponse += content;
+              updateLastAssistantMessage(fullResponse);
+            }
+          } catch (error) {
+            console.error("Error parsing chunk as JSON:", error, chunk);
+            // Fallback to treating it as a plain string if JSON parsing fails
+            fullResponse += String(chunk);
+            updateLastAssistantMessage(fullResponse);
+          }
+        }
+      } else {
+        throw new Error("Expected a ReadableStream response");
+      }
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      setError("Failed to send message. Please try again.");
+      addMessage("assistant", "Error generating response.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="relative grow flex flex-col gap-6 pt-6">
-      {messages.length === 0 && (
-        <div className="mt-3 font-urbanist text-primary-blue text-xl font-light space-y-2">
-          <p>👋 Welcome!</p>
-          <p>
-            I am powered by the latest technology reports from leading
-            institutions like the World Bank, the World Economic Forum,
-            McKinsey, Deloitte and the OECD.
-          </p>
-          <p>Ask me anything about the latest technology trends.</p>
-        </div>
-      )}
-      <ChatMessages messages={messages} isLoading={isLoading} />
+    <div className="flex flex-col h-screen">
+      <div className="flex-grow overflow-y-auto px-2 py-2">
+        <ChatMessages
+          messages={messages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          }))}
+          isLoading={isLoading}
+        />
+
+        {error && (
+          <ChatError
+            message={error}
+            className="mt-2 px-3 py-2 rounded bg-red-50"
+          />
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
       <ChatInput
         newMessage={newMessage}
         isLoading={isLoading}
