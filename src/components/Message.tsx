@@ -1,14 +1,18 @@
 import React from "react";
 import Markdown from "react-markdown";
+import Spinner from "./Spinner.tsx";
+import ChatError from "./ChatError.tsx";
 import userIcon from "../assets/images/user.svg";
 import assistantIcon from "../assets/react.svg";
 
 interface MessageProps {
   role: "user" | "assistant";
   content: string;
+  loading?: boolean;
+  error?: boolean;
 }
 
-const Message: React.FC<MessageProps> = ({ role, content }) => {
+const Message: React.FC<MessageProps> = ({ role, content, loading, error }) => {
   return (
     <div
       className={`flex items-start gap-4 py-4 px-3 rounded-xl ${
@@ -26,12 +30,20 @@ const Message: React.FC<MessageProps> = ({ role, content }) => {
       )}
       <div>
         <div className="markdown-container">
-          {role === "assistant" ? (
+          {loading && !content ? (
+            <Spinner />
+          ) : role === "assistant" ? (
             <Markdown>{content}</Markdown>
           ) : (
             <div className="whitespace-pre-line">{content}</div>
           )}
         </div>
+        {error && (
+          <ChatError
+            message="Error generating the response"
+            className={content ? "mt-2" : ""}
+          />
+        )}
       </div>
     </div>
   );

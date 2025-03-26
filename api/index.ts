@@ -1,5 +1,4 @@
 interface StreamEvent {
-  // event: "start" | "message" | "error" | "end" | "cancelled";
   event: "start" | "message" | "error" | "end" | "cancelled";
   data: StreamEventData;
 }

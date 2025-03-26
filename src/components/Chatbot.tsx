@@ -1,12 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import ChatInput from "./ChatInput.tsx";
-import Message from "./Message.tsx";
-// import { api } from "../../api";
+import ChatMessages from "./ChatMessages.tsx";
+import ChatError from "./ChatError.tsx";
 import api, { parseSSEStream } from "../utils";
+
+// Cookie utility functions
+const setChatIdCookie = (chatId: string) => {
+  document.cookie = `chat_id=${chatId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days expiry
+};
+
+const getChatIdFromCookie = () => {
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split("=");
+    if (name === "chat_id") {
+      return value;
+    }
+  }
+  return null;
+};
 
 interface ChatMessage {
   role: "user" | "assistant";
-  event: "RunCompleted" | "RunResponse" | "RunStarted";
   content: string;
 }
 
@@ -20,7 +35,13 @@ const Chatbot: React.FC = () => {
 
   // Initialize chat on component mount
   useEffect(() => {
-    initializeChat();
+    const storedChatId = getChatIdFromCookie();
+    if (storedChatId) {
+      setChatId(storedChatId);
+      fetchPreviousMessages(storedChatId);
+    } else {
+      initializeChat();
+    }
   }, []);
 
   // Auto-scroll to bottom when messages update
@@ -35,19 +56,34 @@ const Chatbot: React.FC = () => {
     try {
       const chatData = await api.createChat();
       setChatId(chatData.chat_id);
+      setChatIdCookie(chatData.chat_id);
 
       if (chatData.initial_message) {
         setMessages([
           {
             content: chatData.initial_message,
             role: "assistant",
-            event: "RunResponse",
           },
         ]);
       }
     } catch (err) {
       console.error("Failed to initialize chat:", err);
       setError("Failed to initialize chat. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchPreviousMessages = async (chatId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/messages?chat_id=${chatId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error("Error fetching previous messages:", error);
     } finally {
       setIsLoading(false);
     }
@@ -67,13 +103,13 @@ const Chatbot: React.FC = () => {
         (msg) => msg.role === "assistant"
       );
 
-      const onlyResponses = updatedMessages.findIndex(
-        (msg) => msg.event === "RunResponse"
-      );
+      // const onlyResponses = updatedMessages.findIndex(
+      //   (msg) => msg.event === "RunResponse"
+      // );
 
       console.log(updatedMessages);
 
-      if (onlyResponses != 0) return updatedMessages;
+      // if (onlyResponses != 0) return updatedMessages;
 
       // If found, update it; otherwise add a new message
       if (lastAssistantIndex !== -1) {
@@ -84,7 +120,6 @@ const Chatbot: React.FC = () => {
       } else {
         updatedMessages.push({
           role: "assistant",
-          event: "RunResponse",
           content,
         });
       }
@@ -157,20 +192,20 @@ const Chatbot: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex-grow overflow-y-auto px-4 py-2">
-        {messages.map((message, index) => (
-          <Message key={index} content={message.content} role={message.role} />
-        ))}
-
-        {isLoading &&
-          !messages.some((m) => m.role === "assistant" && m.content === "") && (
-            <Message content="Thinking..." role="assistant" />
-          )}
+      <div className="flex-grow overflow-y-auto px-2 py-2">
+        <ChatMessages
+          messages={messages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          }))}
+          isLoading={isLoading}
+        />
 
         {error && (
-          <div className="text-red-500 mt-2 px-3 py-2 rounded bg-red-50">
-            {error}
-          </div>
+          <ChatError
+            message={error}
+            className="mt-2 px-3 py-2 rounded bg-red-50"
+          />
         )}
 
         <div ref={bottomRef} />
