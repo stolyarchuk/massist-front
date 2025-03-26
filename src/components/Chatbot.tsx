@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
-import api, { parseSSEStream } from "../utils";
+import api, { parseSSEStream } from "../utils/api.ts";
+import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
 const setChatIdCookie = (chatId: string) => {
@@ -38,7 +39,7 @@ const Chatbot: React.FC = () => {
     const storedChatId = getChatIdFromCookie();
     if (storedChatId) {
       setChatId(storedChatId);
-      fetchPreviousMessages(storedChatId);
+      // fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
     }
@@ -74,23 +75,23 @@ const Chatbot: React.FC = () => {
     }
   };
 
-  const fetchPreviousMessages = async (chatId: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/messages?chat_id=${chatId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
-      }
-    } catch (error) {
-      console.error("Error fetching previous messages:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const fetchPreviousMessages = async (chatId: string) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch(`/api/messages?chat_id=${chatId}`);
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setMessages(data.messages || []);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching previous messages:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const addMessage = (role: "user" | "assistant", content: string) => {
-    setMessages((prev) => [...prev, { role, event: "RunResponse", content }]);
+    setMessages((prev) => [...prev, { role, content }]);
   };
 
   const updateLastAssistantMessage = (content: string) => {
@@ -103,20 +104,18 @@ const Chatbot: React.FC = () => {
         (msg) => msg.role === "assistant"
       );
 
-      // const onlyResponses = updatedMessages.findIndex(
-      //   (msg) => msg.event === "RunResponse"
-      // );
-
       console.log(updatedMessages);
-
-      // if (onlyResponses != 0) return updatedMessages;
 
       // If found, update it; otherwise add a new message
       if (lastAssistantIndex !== -1) {
-        updatedMessages[lastAssistantIndex] = {
-          ...updatedMessages[lastAssistantIndex],
+        updatedMessages.push({
+          role: "assistant",
           content,
-        };
+        });
+        // updatedMessages[lastAssistantIndex] = {
+        //   ...updatedMessages[lastAssistantIndex],
+        //   content,
+        // };
       } else {
         updatedMessages.push({
           role: "assistant",
@@ -133,8 +132,8 @@ const Chatbot: React.FC = () => {
     const trimmedMessage = newMessage.trim();
 
     // Clear input and add user message
-    setNewMessage("");
     addMessage("user", trimmedMessage);
+    // setNewMessage("");
     setIsLoading(true);
     setError(null);
 
@@ -165,16 +164,22 @@ const Chatbot: React.FC = () => {
             console.log("JSON chunk:", jsonChunk);
 
             // Extract content from the JSON object
-            const content = jsonChunk.content || jsonChunk.data?.content || "";
+            // const content = jsonChunk.content || jsonChunk.data?.content || "";
+            const content = extractContentFromRunResponse(jsonChunk);
+
+            console.log("content: ", content);
 
             if (content) {
               fullResponse += content;
               updateLastAssistantMessage(fullResponse);
             }
+
+            console.log(fullResponse);
           } catch (error) {
             console.error("Error parsing chunk as JSON:", error, chunk);
             // Fallback to treating it as a plain string if JSON parsing fails
             fullResponse += String(chunk);
+            console.log(fullResponse);
             updateLastAssistantMessage(fullResponse);
           }
         }

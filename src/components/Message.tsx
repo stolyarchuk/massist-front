@@ -38,12 +38,7 @@ const Message: React.FC<MessageProps> = ({ role, content, loading, error }) => {
             <div className="whitespace-pre-line">{content}</div>
           )}
         </div>
-        {error && (
-          <ChatError
-            message="Error generating the response"
-            className={content ? "mt-2" : ""}
-          />
-        )}
+        {error && <ChatError message="Error generating the response" className={content ? "mt-2" : ""} />}
       </div>
     </div>
   );
