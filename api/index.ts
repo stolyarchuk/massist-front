@@ -17,7 +17,6 @@ interface Env {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
-  API_URL: "http://127.0.0.1:8000";
 }
 
 // -----------------------------------------------------------------------------
@@ -36,7 +35,7 @@ const api = {
    */
   createChat: async () => {
     try {
-      const response = await fetch(`${env.API_URL}/chat/new`, {
+      const response = await fetch(`${API_BASE_URL}/chat/new`, {
         method: "POST",
       });
 
