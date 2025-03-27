@@ -4,6 +4,7 @@
 interface RunResponseData {
   event: string;
   content?: string;
+  role?: string;
   data?: {
     content?: string;
   };

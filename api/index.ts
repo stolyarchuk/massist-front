@@ -71,6 +71,32 @@ const api = {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      // eventSource = new EventSource(`${API_BASE_URL}/chat/${chatIdOrNew}`);
+
+      // eventSource.onopen = () => {
+      //   console.log("EventSource connected");
+      //   //Everytime the connection gets extablished clearing the previous data from UI
+      //   //   coordinatesElement.innerText = "";
+      // };
+
+      // eventSource.onmessage = (message: MessageEvent) => {
+      //   console.log("message", message);
+      // };
+
+      //eventSource can have event listeners based on the type of event.
+      //Bydefault for message type of event it have the onmessage method which can be used directly or this same can be achieved through explicit eventlisteners
+      // eventSource.addEventListener("message", function (event) {
+      //   // coords = JSON.parse(event.data);
+      //   console.log("message", event);
+      //   // updateCoordinates(coords);
+      // });
+
+      //In case of any error, if eventSource is not closed explicitely then client will retry the connection a new call to backend will happen and the cycle will go on.
+      // eventSource.onerror = (error: ErrorEvent) => {
+      //   console.error("EventSource failed", error);
+      //   eventSource.close();
+      // };
+
       // Handle streaming response
       if (onStreamChunk && response.body) {
         await processStreamingResponse(response.body, onStreamChunk);
@@ -102,7 +128,7 @@ async function processStreamingResponse(
   let buffer = "";
 
   const processStream = async (): Promise<void> => {
-    const { done, value } = await reader.read();
+    const { value, done } = await reader.read();
 
     if (done) {
       // Process any remaining data in buffer
