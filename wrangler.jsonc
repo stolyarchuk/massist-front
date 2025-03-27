@@ -9,8 +9,7 @@
   "compatibility_date": "2025-03-17",
   "assets": {
     "not_found_handling": "single-page-application",
-    "binding": "ASSETS",
-    "directory": "./public/"
+    "binding": "ASSETS"
   },
   "observability": {
     "enabled": true
@@ -19,9 +18,9 @@
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
-  "placement": {
-    "mode": "smart"
-  },
+  // "placement": {
+  //   "mode": "smart"
+  // },
   /**
 	 * Bindings
 	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
