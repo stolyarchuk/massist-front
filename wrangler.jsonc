@@ -6,7 +6,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "massist-front",
   "main": "api/index.ts",
-  "compatibility_date": "2025-03-17",
+  "compatibility_date": "2025-03-10",
   "assets": {
     // "not_found_handling": "single-page-application",
     "binding": "ASSETS",

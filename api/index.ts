@@ -17,6 +17,7 @@ interface Env {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
+  API_URL: "http://127.0.0.1:8000";
 }
 
 // -----------------------------------------------------------------------------
@@ -35,7 +36,7 @@ const api = {
    */
   createChat: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/new`, {
+      const response = await fetch(`${env.API_URL}/chat/new`, {
         method: "POST",
       });
 
@@ -70,32 +71,6 @@ const api = {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      // eventSource = new EventSource(`${API_BASE_URL}/chat/${chatIdOrNew}`);
-
-      // eventSource.onopen = () => {
-      //   console.log("EventSource connected");
-      //   //Everytime the connection gets extablished clearing the previous data from UI
-      //   //   coordinatesElement.innerText = "";
-      // };
-
-      // eventSource.onmessage = (message: MessageEvent) => {
-      //   console.log("message", message);
-      // };
-
-      //eventSource can have event listeners based on the type of event.
-      //Bydefault for message type of event it have the onmessage method which can be used directly or this same can be achieved through explicit eventlisteners
-      // eventSource.addEventListener("message", function (event) {
-      //   // coords = JSON.parse(event.data);
-      //   console.log("message", event);
-      //   // updateCoordinates(coords);
-      // });
-
-      //In case of any error, if eventSource is not closed explicitely then client will retry the connection a new call to backend will happen and the cycle will go on.
-      // eventSource.onerror = (error: ErrorEvent) => {
-      //   console.error("EventSource failed", error);
-      //   eventSource.close();
-      // };
 
       // Handle streaming response
       if (onStreamChunk && response.body) {
@@ -145,8 +120,6 @@ async function processStreamingResponse(
 
     // Decode the chunk and add it to our buffer
     const decodedValue = decoder.decode(value, { stream: true }); // Decoded value
-    console.log("Raw stream value:", value); // Log raw value
-    console.log("Decoded stream value:", decodedValue); // Log decoded value
     buffer += decodedValue;
 
     // Process complete JSON objects in buffer
