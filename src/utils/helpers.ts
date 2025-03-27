@@ -32,7 +32,10 @@ export function extractContentFromRunResponse(
     console.log("data: ", data);
 
     // Check if the event is "RunResponse"
-    if (data && data.event === "RunResponse") {
+    if (
+      (data && data.event === "RunResponse") ||
+      data.event === "RunCompleted"
+    ) {
       // Extract and return the content
       return data.content || data.data?.content || null;
     }
