@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
-import api, { parseSSEStream } from "../utils";
+import api, { parseSSEStream } from "../utils/api.ts";
+import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
 const setChatIdCookie = (chatId: string) => {
@@ -27,22 +29,11 @@ interface ChatMessage {
 
 const Chatbot: React.FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useImmer<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Initialize chat on component mount
-  useEffect(() => {
-    const storedChatId = getChatIdFromCookie();
-    if (storedChatId) {
-      setChatId(storedChatId);
-      fetchPreviousMessages(storedChatId);
-    } else {
-      initializeChat();
-    }
-  }, []);
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -59,12 +50,14 @@ const Chatbot: React.FC = () => {
       setChatIdCookie(chatData.chat_id);
 
       if (chatData.initial_message) {
-        setMessages([
-          {
-            content: chatData.initial_message,
-            role: "assistant",
-          },
-        ]);
+        setMessages(() => {
+          return [
+            {
+              content: chatData.initial_message,
+              role: "assistant",
+            },
+          ];
+        });
       }
     } catch (err) {
       console.error("Failed to initialize chat:", err);
@@ -74,23 +67,34 @@ const Chatbot: React.FC = () => {
     }
   };
 
-  const fetchPreviousMessages = async (chatId: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/messages?chat_id=${chatId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
-      }
-    } catch (error) {
-      console.error("Error fetching previous messages:", error);
-    } finally {
-      setIsLoading(false);
+  // Initialize chat on component mount
+  useEffect(() => {
+    const storedChatId = getChatIdFromCookie();
+    if (storedChatId) {
+      setChatId(storedChatId);
+      // fetchPreviousMessages(storedChatId);
+    } else {
+      initializeChat();
     }
-  };
+  }, []); // Empty dependency array to run only once on mount
+
+  // const fetchPreviousMessages = async (chatId: string) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch(`/api/messages?chat_id=${chatId}`);
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setMessages(data.messages || []);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching previous messages:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const addMessage = (role: "user" | "assistant", content: string) => {
-    setMessages((prev) => [...prev, { role, event: "RunResponse", content }]);
+    setMessages((prev) => [...prev, { role, content }]);
   };
 
   const updateLastAssistantMessage = (content: string) => {
@@ -98,21 +102,19 @@ const Chatbot: React.FC = () => {
       // Clone the messages array
       const updatedMessages = [...prev];
 
-      // Find the last assistant message, if it exists
-      const lastAssistantIndex = updatedMessages.findIndex(
-        (msg) => msg.role === "assistant"
-      );
+      // Find the last assistant message by searching in reverse order
+      const lastAssistantIndex =
+        updatedMessages.length -
+        1 -
+        [...updatedMessages]
+          .reverse()
+          .findIndex((msg) => msg.role === "assistant");
 
-      // const onlyResponses = updatedMessages.findIndex(
-      //   (msg) => msg.event === "RunResponse"
-      // );
-
-      console.log(updatedMessages);
-
-      // if (onlyResponses != 0) return updatedMessages;
-
-      // If found, update it; otherwise add a new message
-      if (lastAssistantIndex !== -1) {
+      // If found and valid index, update it; otherwise add a new message
+      if (
+        lastAssistantIndex !== -1 &&
+        lastAssistantIndex < updatedMessages.length
+      ) {
         updatedMessages[lastAssistantIndex] = {
           ...updatedMessages[lastAssistantIndex],
           content,
@@ -133,8 +135,8 @@ const Chatbot: React.FC = () => {
     const trimmedMessage = newMessage.trim();
 
     // Clear input and add user message
-    setNewMessage("");
     addMessage("user", trimmedMessage);
+    setNewMessage("");
     setIsLoading(true);
     setError(null);
 
@@ -162,15 +164,17 @@ const Chatbot: React.FC = () => {
             // Parse the chunk as JSON
             const jsonChunk =
               typeof chunk === "string" ? JSON.parse(chunk) : chunk;
-            console.log("JSON chunk:", jsonChunk);
 
             // Extract content from the JSON object
-            const content = jsonChunk.content || jsonChunk.data?.content || "";
+            // const content = jsonChunk.content || jsonChunk.data?.content || "";
+            const content = extractContentFromRunResponse(jsonChunk);
 
             if (content) {
               fullResponse += content;
               updateLastAssistantMessage(fullResponse);
             }
+
+            console.log(fullResponse);
           } catch (error) {
             console.error("Error parsing chunk as JSON:", error, chunk);
             // Fallback to treating it as a plain string if JSON parsing fails
