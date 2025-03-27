@@ -97,7 +97,9 @@ const Chatbot: React.FC = () => {
     setMessages((prev) => [...prev, { role, content }]);
   };
 
-  const updateLastAssistantMessage = (content: string) => {
+  const updateLastAssistantMessage = (content: string | undefined) => {
+    if (content === undefined) return;
+
     setMessages((prev) => {
       // Clone the messages array
       const updatedMessages = [...prev];
@@ -165,16 +167,18 @@ const Chatbot: React.FC = () => {
             const jsonChunk =
               typeof chunk === "string" ? JSON.parse(chunk) : chunk;
 
+            console.info("chunk: ", jsonChunk);
+
             // Extract content from the JSON object
-            // const content = jsonChunk.content || jsonChunk.data?.content || "";
-            const content = extractContentFromRunResponse(jsonChunk);
+            const data = extractContentFromRunResponse(jsonChunk);
 
-            if (content) {
-              fullResponse += content;
+            if (data && !data.last_chunk) {
+              fullResponse += data.content;
               updateLastAssistantMessage(fullResponse);
+            } else if (data && data.last_chunk) {
+              // fullResponse = data.content;
+              updateLastAssistantMessage(data.content);
             }
-
-            console.log(fullResponse);
           } catch (error) {
             console.error("Error parsing chunk as JSON:", error, chunk);
             // Fallback to treating it as a plain string if JSON parsing fails

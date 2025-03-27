@@ -3,7 +3,7 @@ import Markdown from "react-markdown";
 import Spinner from "./Spinner.tsx";
 import ChatError from "./ChatError.tsx";
 import userIcon from "../assets/images/user.svg";
-import assistantIcon from "../assets/react.svg";
+import assistantIcon from "../assets/images/assistant.png";
 
 interface MessageProps {
   role: "user" | "assistant";
@@ -38,7 +38,12 @@ const Message: React.FC<MessageProps> = ({ role, content, loading, error }) => {
             <div className="whitespace-pre-line">{content}</div>
           )}
         </div>
-        {error && <ChatError message="Error generating the response" className={content ? "mt-2" : ""} />}
+        {error && (
+          <ChatError
+            message="Error generating the response"
+            className={content ? "mt-2" : ""}
+          />
+        )}
       </div>
     </div>
   );

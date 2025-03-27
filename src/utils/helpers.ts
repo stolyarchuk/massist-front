@@ -8,6 +8,7 @@ interface RunResponseData {
   data?: {
     content?: string;
   };
+  last_chunk: boolean;
 }
 
 /**
@@ -17,7 +18,7 @@ interface RunResponseData {
  */
 export function extractContentFromRunResponse(
   jsonChunk: unknown
-): string | null {
+): RunResponseData | null {
   try {
     // Parse the JSON if it's a string
     const data: RunResponseData =
@@ -29,15 +30,13 @@ export function extractContentFromRunResponse(
         ? (jsonChunk.data as RunResponseData)
         : ({} as RunResponseData);
 
-    console.log("data: ", data);
+    if (data && data.event === "RunResponse") {
+      return data || null;
+    }
 
-    // Check if the event is "RunResponse"
-    if (
-      (data && data.event === "RunResponse") ||
-      data.event === "RunCompleted"
-    ) {
-      // Extract and return the content
-      return data.content || data.data?.content || null;
+    if (data && data.event === "RunCompleted") {
+      data.last_chunk = true;
+      return data || null;
     }
 
     // Return null if it's not a "RunResponse" event

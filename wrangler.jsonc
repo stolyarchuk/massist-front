@@ -6,6 +6,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "massist-front",
   "main": "api/index.ts",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "compatibility_date": "2025-03-17",
   "assets": {
     "not_found_handling": "single-page-application",
