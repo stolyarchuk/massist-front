@@ -9,7 +9,8 @@
   "compatibility_date": "2025-03-17",
   "assets": {
     "not_found_handling": "single-page-application",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "directory": "./public/"
   },
   "observability": {
     "enabled": true
