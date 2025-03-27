@@ -108,14 +108,10 @@ const Chatbot: React.FC = () => {
 
       // If found, update it; otherwise add a new message
       if (lastAssistantIndex !== -1) {
-        updatedMessages.push({
-          role: "assistant",
+        updatedMessages[lastAssistantIndex] = {
+          ...updatedMessages[lastAssistantIndex],
           content,
-        });
-        // updatedMessages[lastAssistantIndex] = {
-        //   ...updatedMessages[lastAssistantIndex],
-        //   content,
-        // };
+        };
       } else {
         updatedMessages.push({
           role: "assistant",
