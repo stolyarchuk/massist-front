@@ -8,9 +8,9 @@
   "main": "api/index.ts",
   "compatibility_date": "2025-03-17",
   "assets": {
-    "not_found_handling": "single-page-application",
+    // "not_found_handling": "single-page-application",
     "binding": "ASSETS",
-    "directory": "public"
+    "directory": "./public/"
   },
   "observability": {
     "enabled": true
