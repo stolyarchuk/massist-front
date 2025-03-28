@@ -7,9 +7,9 @@ import { parseSSEStream } from "../utils/api.ts";
 import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
-// const setChatIdCookie = (chatId: string) => {
-//   document.cookie = `chat_id=${chatId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days expiry
-// };
+const setChatIdCookie = (chatId: string) => {
+  document.cookie = `chat_id=${chatId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days expiry
+};
 
 const getChatIdFromCookie = () => {
   const cookies = document.cookie.split(";");
@@ -26,6 +26,8 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }
+
+console.log(setChatIdCookie);
 
 // interface ChatResponse {
 //   chat_id?: string;
