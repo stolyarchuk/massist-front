@@ -7,25 +7,11 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   { ignores: ["dist"] },
   {
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-      // ...tseslint.configs.recommendedTypeChecked,
-      // ...tseslint.configs.stylisticTypeChecked,
-    ],
-    settings: { react: { version: "19.0" } },
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 2020,
       globals: globals.browser,
-      // parserOptions: {
-      //   project: [
-      //     "./tsconfig.node.json",
-      //     // "./tsconfig.app.json",
-      //     "./tsconfig.worker.json",
-      //   ],
-      //   tsconfigRootDir: import.meta.dirname,
-      // },
     },
     plugins: {
       "react-hooks": reactHooks,

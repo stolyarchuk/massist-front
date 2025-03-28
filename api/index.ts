@@ -173,11 +173,19 @@ export default {
           API_BASE_URL
         );
 
-        return await fetch(backendUrl.toString(), {
-          method: request.method,
-          headers: request.headers,
-          body: request.body,
-        });
+        // let p = new Request(backendUrl.toString(), {
+        //   method: request.method,
+        //   headers: request.headers,
+        //   body: request.body,
+        // });
+
+        return await env.ASSETS.fetch(
+          new Request(backendUrl.toString(), {
+            method: request.method,
+            headers: request.headers,
+            body: request.body,
+          })
+        );
       }
 
       // Serve static assets
