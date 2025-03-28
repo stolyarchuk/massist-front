@@ -5,7 +5,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "massist-front",
-  "main": "./api/index.ts",
+  "main": "./src/api/index.ts",
   "compatibility_date": "2025-03-10",
   "compatibility_flags": [
     "nodejs_compat"
@@ -13,7 +13,7 @@
   // "upload_source_maps": true,
   "assets": {
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
+    // "not_found_handling": "single-page-application",
     "directory": "./public/"
   }
   /**

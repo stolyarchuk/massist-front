@@ -13,10 +13,10 @@ export default tseslint.config(
       // ...tseslint.configs.recommendedTypeChecked,
       // ...tseslint.configs.stylisticTypeChecked,
     ],
-    settings: { react: { version: "18.3" } },
+    settings: { react: { version: "19.0" } },
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 2022,
       globals: globals.browser,
       // parserOptions: {
       //   project: [
