@@ -1,3 +1,6 @@
+// import { Hono } from "hono";
+// const app = new Hono<{ Bindings: Env }>();
+
 interface StreamEvent {
   event: "start" | "message" | "error" | "end" | "cancelled";
   data: StreamEventData;
@@ -28,6 +31,10 @@ const API_BASE_URL = "http://127.0.0.1:8000"; // Replace with your actual API ba
 // -----------------------------------------------------------------------------
 // API Client Implementation
 // -----------------------------------------------------------------------------
+
+// app.get("*", (c) => {
+//   return c.env.ASSETS.fetch(c.req.raw);
+// });
 
 const api = {
   /**
