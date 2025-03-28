@@ -2,13 +2,17 @@
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.app.json"
-    },
-    {
       "path": "./tsconfig.node.json"
     },
     {
       "path": "./tsconfig.worker.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "checkJs": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true
+  }
 }
