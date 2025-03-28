@@ -27,6 +27,11 @@ interface ChatMessage {
   content: string;
 }
 
+interface ChatResponse {
+  chat_id?: string;
+  initial_message?: string;
+}
+
 const Chatbot: React.FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
@@ -35,25 +40,22 @@ const Chatbot: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages update
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const initializeChat = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const chatData = await api.createChat();
-      setChatId(chatData.chat_id);
-      setChatIdCookie(chatData.chat_id);
+      const chatData = (await api.createChat()) as ChatResponse;
 
-      if (chatData.initial_message) {
+      if (chatData) {
+        setChatId(chatData.chat_id || "undefined");
+        setChatIdCookie(chatData.chat_id || "undefined");
+
         setMessages(() => {
           return [
             {
-              content: chatData.initial_message,
+              content:
+                chatData.initial_message || "Hello! How can I help you today?",
               role: "assistant",
             },
           ];
@@ -100,34 +102,21 @@ const Chatbot: React.FC = () => {
   const updateLastAssistantMessage = (content: string | undefined) => {
     if (content === undefined) return;
 
-    setMessages((prev) => {
-      // Clone the messages array
-      const updatedMessages = [...prev];
-
+    setMessages((draft) => {
       // Find the last assistant message by searching in reverse order
-      const lastAssistantIndex =
-        updatedMessages.length -
-        1 -
-        [...updatedMessages]
-          .reverse()
-          .findIndex((msg) => msg.role === "assistant");
-
-      // If found and valid index, update it; otherwise add a new message
-      if (
-        lastAssistantIndex !== -1 &&
-        lastAssistantIndex < updatedMessages.length
-      ) {
-        updatedMessages[lastAssistantIndex] = {
-          ...updatedMessages[lastAssistantIndex],
-          content,
-        };
-      } else {
-        updatedMessages.push({
-          role: "assistant",
-          content,
-        });
+      for (let i = draft.length - 1; i >= 0; i--) {
+        if (draft[i].role === "assistant") {
+          // Update the content of the last assistant message
+          draft[i].content = content;
+          return; // Early return since we're using Immer
+        }
       }
-      return updatedMessages;
+
+      // If no assistant message found, add a new one
+      draft.push({
+        role: "assistant",
+        content,
+      });
     });
   };
 
