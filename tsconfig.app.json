@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2020",
+    "target": "ES2024",
     "useDefineForClassFields": true,
     "lib": [
-      "ES2020",
+      "ES2024",
       "DOM",
       "DOM.Iterable"
     ],
@@ -22,7 +22,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "types": [
+      "./worker-configuration.d.ts",
+      "vite/client"
+    ],
   },
   "include": [
     "src"

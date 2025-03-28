@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run typecheck && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "npm run build && vite preview",
     "deploy": "npm run build && wrangler deploy",
     "typegen": "wrangler types",
-    "typecheck": "npm run type-gen && tsc"
+    "typecheck": "npm run typegen && tsc"
   },
   "dependencies": {
     "eventsource-parser": "^2.0.1",
