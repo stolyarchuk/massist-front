@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
-import { parseSSEStream } from "../utils/api.ts";
+import { parseSSEStream } from "../utils/helpers.ts";
+import api from "../../api/index.ts";
+import { ChatMessage, ChatResponse } from "../../api/types.ts";
+
 import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
@@ -22,65 +25,58 @@ const getChatIdFromCookie = () => {
   return null;
 };
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-console.log(setChatIdCookie);
-
-// interface ChatResponse {
-//   chat_id?: string;
-//   initial_message?: string;
-// }
-
 const Chatbot: React.FC = () => {
-  // const [chatId, setChatId] = useState<string | null>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const initializeChat = async () => {
+  const initializeChat = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
-    // try {
-    //   const chatData = (await api.createChat()) as ChatResponse;
+    console.log("initializeChat");
 
-    //   if (chatData) {
-    //     setChatId(chatData.chat_id || "undefined");
-    //     setChatIdCookie(chatData.chat_id || "undefined");
+    try {
+      const chatData = (await api.createChat()) as ChatResponse;
 
-    //     setMessages(() => {
-    //       return [
-    //         {
-    //           content:
-    //             chatData.initial_message || "Hello! How can I help you today?",
-    //           role: "assistant",
-    //         },
-    //       ];
-    //     });
-    //   }
-    // } catch (err) {
-    //   console.error("Failed to initialize chat:", err);
-    //   setError("Failed to initialize chat. Please try again.");
-    // } finally {
-    //   setIsLoading(false);
-    // }
-  };
+      if (chatData) {
+        setChatId(chatData.chat_id || "undefined");
+        setChatIdCookie(chatData.chat_id || "undefined");
+
+        setMessages(() => {
+          return [
+            {
+              content:
+                chatData.initial_message || "Hello! How can I help you today?",
+              role: "assistant",
+            },
+          ];
+        });
+      }
+    } catch (err) {
+      console.error("Failed to initialize chat:", err);
+      setError("Failed to initialize chat. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setMessages]);
 
   // Initialize chat on component mount
   useEffect(() => {
+    console.log("useEffect");
+
     const storedChatId = getChatIdFromCookie();
     if (storedChatId) {
+      console.info("has storedChatId");
       // setChatId(storedChatId);
       // fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
     }
-  }, []); // Empty dependency array to run only once on mount
+  }, [initializeChat]); // Empty dependency array to run only once on mount
 
   // const fetchPreviousMessages = async (chatId: string) => {
   //   setIsLoading(true);
@@ -135,12 +131,10 @@ const Chatbot: React.FC = () => {
 
     try {
       // Send message to API
-      // const responseStream = await api.sendChatMessage(
-      //   chatId || "new",
-      //   trimmedMessage
-      // );
-
-      const responseStream = null;
+      const responseStream = await api.sendChatMessage(
+        chatId || "new",
+        trimmedMessage
+      );
 
       if (!responseStream) {
         throw new Error("No response stream received");
@@ -160,8 +154,6 @@ const Chatbot: React.FC = () => {
             // Parse the chunk as JSON
             const jsonChunk =
               typeof chunk === "string" ? JSON.parse(chunk) : chunk;
-
-            console.info("chunk: ", jsonChunk);
 
             // Extract content from the JSON object
             const data = extractContentFromRunResponse(jsonChunk);
