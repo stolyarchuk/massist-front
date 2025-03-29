@@ -4,6 +4,7 @@ import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
 import { parseSSEStream } from "../utils/api.ts";
+import api from "../../api";
 import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
@@ -27,15 +28,13 @@ interface ChatMessage {
   content: string;
 }
 
-console.log(setChatIdCookie);
-
-// interface ChatResponse {
-//   chat_id?: string;
-//   initial_message?: string;
-// }
+interface ChatResponse {
+  chat_id?: string;
+  initial_message?: string;
+}
 
 const Chatbot: React.FC = () => {
-  // const [chatId, setChatId] = useState<string | null>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -46,29 +45,29 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    // try {
-    //   const chatData = (await api.createChat()) as ChatResponse;
+    try {
+      const chatData = (await api.createChat()) as ChatResponse;
 
-    //   if (chatData) {
-    //     setChatId(chatData.chat_id || "undefined");
-    //     setChatIdCookie(chatData.chat_id || "undefined");
+      if (chatData) {
+        setChatId(chatData.chat_id || "undefined");
+        setChatIdCookie(chatData.chat_id || "undefined");
 
-    //     setMessages(() => {
-    //       return [
-    //         {
-    //           content:
-    //             chatData.initial_message || "Hello! How can I help you today?",
-    //           role: "assistant",
-    //         },
-    //       ];
-    //     });
-    //   }
-    // } catch (err) {
-    //   console.error("Failed to initialize chat:", err);
-    //   setError("Failed to initialize chat. Please try again.");
-    // } finally {
-    //   setIsLoading(false);
-    // }
+        setMessages(() => {
+          return [
+            {
+              content:
+                chatData.initial_message || "Hello! How can I help you today?",
+              role: "assistant",
+            },
+          ];
+        });
+      }
+    } catch (err) {
+      console.error("Failed to initialize chat:", err);
+      setError("Failed to initialize chat. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Initialize chat on component mount
@@ -135,12 +134,10 @@ const Chatbot: React.FC = () => {
 
     try {
       // Send message to API
-      // const responseStream = await api.sendChatMessage(
-      //   chatId || "new",
-      //   trimmedMessage
-      // );
-
-      const responseStream = null;
+      const responseStream = await api.sendChatMessage(
+        chatId || "new",
+        trimmedMessage
+      );
 
       if (!responseStream) {
         throw new Error("No response stream received");
@@ -160,8 +157,6 @@ const Chatbot: React.FC = () => {
             // Parse the chunk as JSON
             const jsonChunk =
               typeof chunk === "string" ? JSON.parse(chunk) : chunk;
-
-            console.info("chunk: ", jsonChunk);
 
             // Extract content from the JSON object
             const data = extractContentFromRunResponse(jsonChunk);

@@ -1,5 +1,5 @@
 import { EventSourceParserStream } from "eventsource-parser/stream";
-// import api from "../../api";
+// import { api } from "../../api";
 
 export async function* parseSSEStream(stream: ReadableStream) {
   const sseStream = stream
