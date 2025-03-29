@@ -5,6 +5,7 @@ import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
 import { parseSSEStream } from "../utils/api.ts";
 import api from "../../api";
+import { ChatMessage, ChatResponse } from "../utils/types.ts";
 import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
@@ -23,25 +24,18 @@ const getChatIdFromCookie = () => {
   return null;
 };
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface ChatResponse {
-  chat_id?: string;
-  initial_message?: string;
-}
-
 const Chatbot: React.FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [newMessage, setNewMessage] = useImmer<ChatMessage>({
+    role: "user",
+    content: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const initializeChat = async () => {
+  const initializeChat = React.useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -68,7 +62,7 @@ const Chatbot: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setMessages]);
 
   // Initialize chat on component mount
   useEffect(() => {
@@ -79,7 +73,7 @@ const Chatbot: React.FC = () => {
     } else {
       initializeChat();
     }
-  }, []); // Empty dependency array to run only once on mount
+  }, [initializeChat]); // Added initializeChat as a dependency
 
   // const fetchPreviousMessages = async (chatId: string) => {
   //   setIsLoading(true);
@@ -122,30 +116,31 @@ const Chatbot: React.FC = () => {
   };
 
   const submitNewMessage = async () => {
-    if (!newMessage.trim() || isLoading) return;
+    if (!newMessage.content.trim() || isLoading) return;
 
-    const trimmedMessage = newMessage.trim();
+    const trimmedMessage = newMessage.content.trim();
 
     // Clear input and add user message
     addMessage("user", trimmedMessage);
-    setNewMessage("");
+    setNewMessage((draft) => {
+      draft.content = "";
+    });
     setIsLoading(true);
     setError(null);
 
     try {
-      // Send message to API
-      const responseStream = await api.sendChatMessage(
-        chatId || "new",
-        trimmedMessage
-      );
+      // Send message to API - Convert string to ChatMessage object
+      const responseStream = await api.sendChatMessage(chatId || "new", {
+        role: "user",
+        content: trimmedMessage,
+      });
 
       if (!responseStream) {
         throw new Error("No response stream received");
       }
 
       // Handle streaming response
-      // if (responseStream instanceof ReadableStream) {
-      if (responseStream === null) {
+      if (responseStream instanceof ReadableStream) {
         // Add initial empty assistant message that will be updated
         addMessage("assistant", "");
 
@@ -211,7 +206,11 @@ const Chatbot: React.FC = () => {
       <ChatInput
         newMessage={newMessage}
         isLoading={isLoading}
-        setNewMessage={setNewMessage}
+        setNewMessage={(content: string) =>
+          setNewMessage((draft) => {
+            draft.content = content;
+          })
+        }
         submitNewMessage={submitNewMessage}
       />
     </div>

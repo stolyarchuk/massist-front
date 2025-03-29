@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import Env from "./types.ts";
+import { Env } from "../src/utils/types.ts";
 
 const api = new Hono<{ Bindings: Env }>();
 
@@ -9,8 +9,14 @@ api.get("*", (c) => {
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
+// api.createChat
 api.post("/chat/new", (c) => {
   console.log(c);
+
+  c.req.path.concat(c.env.API_KEY, "/chat/new");
+
+  console.log("context", c);
+
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
