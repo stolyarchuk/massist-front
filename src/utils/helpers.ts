@@ -1,3 +1,5 @@
+import { EventSourceParserStream } from "eventsource-parser/stream";
+
 /**
  * Interface defining the structure of a RunResponse event
  */
@@ -44,5 +46,24 @@ export function extractContentFromRunResponse(
   } catch (error) {
     console.error("Error processing JSON chunk:", error);
     return null;
+  }
+}
+
+export async function* parseSSEStream(stream: ReadableStream) {
+  const sseStream = stream
+    .pipeThrough(new TextDecoderStream())
+    .pipeThrough(new EventSourceParserStream());
+
+  const reader = sseStream.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value.type === "event") {
+        yield value.data;
+      }
+    }
+  } finally {
+    reader.releaseLock();
   }
 }

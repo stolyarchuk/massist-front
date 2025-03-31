@@ -1,16 +1,19 @@
-declare module "hono" {
-  interface Hono {
-    // Health check endpoint generator
-    addHealthCheck(): void;
-  }
-}
-
-interface Env {
+export interface Env {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
 
-  API_BASE_URL: string;
+  API_URL: string;
 }
 
-export default Env;
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatResponse {
+  chat_id?: string;
+  initial_message?: string;
+}
+
+// export default Env;

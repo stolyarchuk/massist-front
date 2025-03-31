@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
-import { parseSSEStream } from "../utils/api.ts";
-import api from "../../api";
+import { parseSSEStream } from "../utils/helpers.ts";
+import api from "../../api/index.ts";
+import { ChatMessage, ChatResponse } from "../../api/types.ts";
+
 import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
@@ -23,16 +25,6 @@ const getChatIdFromCookie = () => {
   return null;
 };
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface ChatResponse {
-  chat_id?: string;
-  initial_message?: string;
-}
-
 const Chatbot: React.FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
@@ -41,9 +33,11 @@ const Chatbot: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const initializeChat = async () => {
+  const initializeChat = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
+    console.log("initializeChat");
 
     try {
       const chatData = (await api.createChat()) as ChatResponse;
@@ -68,18 +62,21 @@ const Chatbot: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setMessages]);
 
   // Initialize chat on component mount
   useEffect(() => {
+    console.log("useEffect");
+
     const storedChatId = getChatIdFromCookie();
     if (storedChatId) {
+      console.info("has storedChatId");
       // setChatId(storedChatId);
       // fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
     }
-  }, []); // Empty dependency array to run only once on mount
+  }, [initializeChat]); // Empty dependency array to run only once on mount
 
   // const fetchPreviousMessages = async (chatId: string) => {
   //   setIsLoading(true);
