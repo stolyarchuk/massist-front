@@ -68,6 +68,28 @@ api.post("/api/chat/new", async (c) => {
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
+api.post("/api/chat/new", (c) => {
+  const req = c.req.raw;
+  const url = new URL(req.url);
+
+  if (url.pathname.startsWith("/api/")) {
+    // console.log("c.env.API_URL", c.env.API_URL);
+    const backendUrl = new URL(
+      url.pathname.replace("/api", "http://127.0.0.1:8000")
+    );
+
+    console.log("backendUrl", backendUrl.toString());
+
+    return c.env.ASSETS.fetch(new Request(backendUrl.toString()), {
+      headers: req.headers,
+      method: "POST",
+      body: req.body,
+    });
+  }
+
+  return c.env.ASSETS.fetch(c.req.raw);
+});
+
 api.post("*", (c) => {
   console.log("POSOSSSSSS");
   return c.env.ASSETS.fetch(c.req.raw, { method: "POST" });
@@ -88,6 +110,15 @@ api.createChat = async (): Promise<ChatResponse> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    console.log("response", response);
+
+    // Handle streaming response
+    // if (response.body) {
+    //   await processStreamingResponse(response.body, onStreamChunk);
+    //   // return null;
+    // }
+
+    // For non-streaming responses, return the body as before
     return await response.json();
   } catch (error) {
     console.error("Error sending message:", error);
