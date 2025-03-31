@@ -1,8 +1,14 @@
 import { Hono } from "hono";
-// import Env from "./types.ts";
-import { ChatResponse } from "./types.ts";
-// import { env } from "hono/adapter";
 // import { Env } from "./types.ts";
+import { ChatResponse } from "./types.ts";
+
+// type Bindings = {
+//   ASSETS: {
+//     fetch(request: Request): Promise<Response>;
+//   };
+
+//   API_URL: string;
+// };
 
 const api = new Hono<{ Bindings: Env }>();
 
@@ -35,26 +41,27 @@ declare module "hono" {
 
 api.get("/api/", (c) => c.json({ name: "Cloudflare" }));
 
-api.get("*", (c) => {
-  return c.env.ASSETS.fetch(c.req.raw);
+api.get("*", async (c) => {
+  return await c.env.ASSETS.fetch(c.req.raw);
 });
 
-api.post("/api/chat/new", (c) => {
+api.post("/api/chat/new", async (c) => {
+  console.log("c.env.API_URL /api/chat/new", c.env.API_URL);
+  console.log("c.env.ASSETS /api/chat/new", c.env.ASSETS);
+
   const req = c.req.raw;
   const url = new URL(req.url);
 
   if (url.pathname.startsWith("/api/")) {
-    // console.log("c.env.API_URL", c.env.API_URL);
     const backendUrl = new URL(
       url.pathname.replace("/api", "http://127.0.0.1:8000")
     );
 
     console.log("backendUrl", backendUrl.toString());
 
-    return c.env.ASSETS.fetch(new Request(backendUrl.toString()), {
+    return await fetch(new Request(backendUrl.toString()), {
       headers: req.headers,
       method: "POST",
-      body: req.body,
     });
   }
 
@@ -81,15 +88,6 @@ api.createChat = async (): Promise<ChatResponse> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    console.log("response", response);
-
-    // Handle streaming response
-    // if (response.body) {
-    //   await processStreamingResponse(response.body, onStreamChunk);
-    //   // return null;
-    // }
-
-    // For non-streaming responses, return the body as before
     return await response.json();
   } catch (error) {
     console.error("Error sending message:", error);

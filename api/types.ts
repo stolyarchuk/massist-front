@@ -1,10 +1,10 @@
-export interface Env {
-  ASSETS: {
-    fetch(request: Request): Promise<Response>;
-  };
+// export interface Env {
+//   ASSETS: {
+//     fetch(request: Request): Promise<Response>;
+//   };
 
-  API_URL: string;
-}
+//   API_URL: string;
+// }
 
 export interface ChatMessage {
   role: "user" | "assistant";
