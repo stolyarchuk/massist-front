@@ -1,15 +1,9 @@
 import useAutoScroll from "../hooks/useAutoScroll.tsx";
 import Message from "./Message.tsx";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  loading?: boolean;
-  error?: boolean;
-}
+import { ChatMessage } from "../utils/types.ts";
 
 interface ChatMessagesProps {
-  messages: Message[];
+  messages: ChatMessage[];
   isLoading: boolean;
 }
 
@@ -26,7 +20,7 @@ const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
       <div className="space-y-4">
         {messages.map((message, idx) => (
           <Message
-            key={idx}
+            key={message.id || idx}
             role={message.role}
             content={message.content}
             loading={
@@ -34,7 +28,7 @@ const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
               message.content === "" &&
               isLoading
             }
-            error={message.error}
+            error={false}
           />
         ))}
 
