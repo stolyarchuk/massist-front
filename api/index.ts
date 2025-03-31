@@ -45,6 +45,30 @@ api.get("*", async (c) => {
   return await c.env.ASSETS.fetch(c.req.raw);
 });
 
+api.post("/api/chat/:chat_id", async (c) => {
+  console.log("c.env.API_URL /api/chat/:chat_id", c.env.API_URL);
+  console.log("c.env.ASSETS /api/chat/:chat_id", c.env.ASSETS);
+
+  const request = c.req.raw;
+  const url = new URL(request.url);
+
+  if (url.pathname.startsWith("/api/")) {
+    const backendUrl = new URL(
+      url.pathname.replace("/api", "http://127.0.0.1:8000")
+    );
+
+    console.log("backendUrl", backendUrl.toString());
+
+    return await fetch(new Request(backendUrl.toString()), {
+      headers: request.headers,
+      method: "POST",
+      body: request.body,
+    });
+  }
+
+  return c.env.ASSETS.fetch(c.req.raw);
+});
+
 api.post("/api/chat/new", async (c) => {
   console.log("c.env.API_URL /api/chat/new", c.env.API_URL);
   console.log("c.env.ASSETS /api/chat/new", c.env.ASSETS);
@@ -68,33 +92,6 @@ api.post("/api/chat/new", async (c) => {
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
-api.post("/api/chat/new", (c) => {
-  const req = c.req.raw;
-  const url = new URL(req.url);
-
-  if (url.pathname.startsWith("/api/")) {
-    // console.log("c.env.API_URL", c.env.API_URL);
-    const backendUrl = new URL(
-      url.pathname.replace("/api", "http://127.0.0.1:8000")
-    );
-
-    console.log("backendUrl", backendUrl.toString());
-
-    return c.env.ASSETS.fetch(new Request(backendUrl.toString()), {
-      headers: req.headers,
-      method: "POST",
-      body: req.body,
-    });
-  }
-
-  return c.env.ASSETS.fetch(c.req.raw);
-});
-
-api.post("*", (c) => {
-  console.log("POSOSSSSSS");
-  return c.env.ASSETS.fetch(c.req.raw, { method: "POST" });
-});
-
 api.createChat = async (): Promise<ChatResponse> => {
   console.log("createChat");
 
@@ -110,7 +107,7 @@ api.createChat = async (): Promise<ChatResponse> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    console.log("response", response);
+    // console.log("response", response);
 
     // Handle streaming response
     // if (response.body) {
@@ -213,23 +210,5 @@ async function processStreamingResponse(
   await processStream();
 }
 
-// const api = {
-//   createChat: async (c) => {
-//     try {
-//       const response = await fetch(`${API_BASE_URL}/chat/new`, {
-//         method: "POST",
-//       });
-
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! status: ${response.status}`);
-//       }
-
-//       return await response.json();
-//     } catch (error) {
-//       console.error("Error creating chat:", error);
-//       throw error;
-//     }
-//   },
-// };
 
 export default api;

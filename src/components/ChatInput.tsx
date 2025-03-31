@@ -1,4 +1,4 @@
-import useAutosize from "../hooks/useAutosize.tsx";
+import useAutosize from "../hooks/useAutosize.ts";
 import sendIcon from "../assets/images/send.svg";
 
 interface ChatInputProps {

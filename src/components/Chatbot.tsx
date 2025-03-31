@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
@@ -31,7 +31,7 @@ const Chatbot: React.FC = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // const bottomRef = useRef<HTMLDivElement>(null);
 
   const initializeChat = useCallback(async () => {
     setIsLoading(true);
@@ -185,25 +185,21 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex-grow overflow-y-auto px-2 py-2">
-        <ChatMessages
-          messages={messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          }))}
-          isLoading={isLoading}
+    <div className="relative grow flex flex-col gap-6 pt-6">
+      <ChatMessages
+        messages={messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }))}
+        isLoading={isLoading}
+      />
+
+      {error && (
+        <ChatError
+          message={error}
+          className="mt-2 px-3 py-2 rounded bg-red-50"
         />
-
-        {error && (
-          <ChatError
-            message={error}
-            className="mt-2 px-3 py-2 rounded bg-red-50"
-          />
-        )}
-
-        <div ref={bottomRef} />
-      </div>
+      )}
 
       <ChatInput
         newMessage={newMessage}
