@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
-import { parseSSEStream } from "../utils/api.ts";
+import { parseSSEStream } from "../utils/helpers.ts";
+import { api } from "../utils/api.ts";
+import { ChatMessage, ChatResponse } from "../utils/types.ts";
+
 import { extractContentFromRunResponse } from "../utils/helpers.ts";
 
 // Cookie utility functions
@@ -22,65 +25,53 @@ const getChatIdFromCookie = () => {
   return null;
 };
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-console.log(setChatIdCookie);
-
-// interface ChatResponse {
-//   chat_id?: string;
-//   initial_message?: string;
-// }
-
 const Chatbot: React.FC = () => {
-  // const [chatId, setChatId] = useState<string | null>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // const bottomRef = useRef<HTMLDivElement>(null);
 
-  const initializeChat = async () => {
+  const initializeChat = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
-    // try {
-    //   const chatData = (await api.createChat()) as ChatResponse;
+    try {
+      const chatData = (await api.createChat()) as ChatResponse;
 
-    //   if (chatData) {
-    //     setChatId(chatData.chat_id || "undefined");
-    //     setChatIdCookie(chatData.chat_id || "undefined");
+      if (chatData) {
+        setChatId(chatData.chat_id || "undefined");
+        setChatIdCookie(chatData.chat_id || "undefined");
 
-    //     setMessages(() => {
-    //       return [
-    //         {
-    //           content:
-    //             chatData.initial_message || "Hello! How can I help you today?",
-    //           role: "assistant",
-    //         },
-    //       ];
-    //     });
-    //   }
-    // } catch (err) {
-    //   console.error("Failed to initialize chat:", err);
-    //   setError("Failed to initialize chat. Please try again.");
-    // } finally {
-    //   setIsLoading(false);
-    // }
-  };
+        setMessages(() => {
+          return [
+            {
+              content:
+                chatData.initial_message || "Hello! How can I help you today?",
+              role: "assistant",
+            },
+          ];
+        });
+      }
+    } catch (err) {
+      console.error("Failed to initialize chat:", err);
+      setError("Failed to initialize chat. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setMessages]);
 
   // Initialize chat on component mount
   useEffect(() => {
     const storedChatId = getChatIdFromCookie();
     if (storedChatId) {
-      // setChatId(storedChatId);
+      setChatId(storedChatId);
       // fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
     }
-  }, []); // Empty dependency array to run only once on mount
+  }, [initializeChat]); // Empty dependency array to run only once on mount
 
   // const fetchPreviousMessages = async (chatId: string) => {
   //   setIsLoading(true);
@@ -123,9 +114,9 @@ const Chatbot: React.FC = () => {
   };
 
   const submitNewMessage = async () => {
-    if (!newMessage.trim() || isLoading) return;
-
     const trimmedMessage = newMessage.trim();
+
+    if (!trimmedMessage || isLoading) return;
 
     // Clear input and add user message
     addMessage("user", trimmedMessage);
@@ -135,20 +126,17 @@ const Chatbot: React.FC = () => {
 
     try {
       // Send message to API
-      // const responseStream = await api.sendChatMessage(
-      //   chatId || "new",
-      //   trimmedMessage
-      // );
-
-      const responseStream = null;
+      const responseStream = await api.sendChatMessage(
+        chatId || "new",
+        trimmedMessage
+      );
 
       if (!responseStream) {
         throw new Error("No response stream received");
       }
 
       // Handle streaming response
-      // if (responseStream instanceof ReadableStream) {
-      if (responseStream === null) {
+      if (responseStream instanceof ReadableStream) {
         // Add initial empty assistant message that will be updated
         addMessage("assistant", "");
 
@@ -160,8 +148,6 @@ const Chatbot: React.FC = () => {
             // Parse the chunk as JSON
             const jsonChunk =
               typeof chunk === "string" ? JSON.parse(chunk) : chunk;
-
-            console.info("chunk: ", jsonChunk);
 
             // Extract content from the JSON object
             const data = extractContentFromRunResponse(jsonChunk);
@@ -193,25 +179,21 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex-grow overflow-y-auto px-2 py-2">
-        <ChatMessages
-          messages={messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          }))}
-          isLoading={isLoading}
+    <div className="relative grow flex flex-col gap-6 pt-6">
+      <ChatMessages
+        messages={messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }))}
+        isLoading={isLoading}
+      />
+
+      {error && (
+        <ChatError
+          message={error}
+          className="mt-2 px-3 py-2 rounded bg-red-50"
         />
-
-        {error && (
-          <ChatError
-            message={error}
-            className="mt-2 px-3 py-2 rounded bg-red-50"
-          />
-        )}
-
-        <div ref={bottomRef} />
-      </div>
+      )}
 
       <ChatInput
         newMessage={newMessage}

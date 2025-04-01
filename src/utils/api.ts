@@ -1,24 +1,114 @@
-import { EventSourceParserStream } from "eventsource-parser/stream";
-// import api from "../../api";
+import { ChatResponse, StreamEvent } from "./types.ts";
 
-export async function* parseSSEStream(stream: ReadableStream) {
-  const sseStream = stream
-    .pipeThrough(new TextDecoderStream())
-    .pipeThrough(new EventSourceParserStream());
+const API_URL = import.meta.env.VITE_API_URL;
 
-  const reader = sseStream.getReader();
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value.type === "event") {
-        yield value.data;
+export const api = {
+  /**
+   * Create a new chat session
+   */
+  createChat: async (): Promise<ChatResponse> => {
+    console.log("API_URL", API_URL);
+
+    try {
+      const response = await fetch(`${API_URL}/chat/new`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error creating chat:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Send a message to a chat session with optional streaming support
+   */
+  sendChatMessage: async (
+    chatIdOrNew: string,
+    message: string,
+    onStreamChunk?: (chunk: StreamEvent) => void
+  ): Promise<ReadableStream | null> => {
+    try {
+      const response = await fetch(`${API_URL}/chat/${chatIdOrNew}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Handle streaming response
+      if (onStreamChunk && response.body) {
+        await processStreamingResponse(response.body, onStreamChunk);
+        return null;
+      }
+
+      // For non-streaming responses, return the body as before
+      return response.body;
+    } catch (error) {
+      console.error("Error sending message:", error);
+      throw error;
+    }
+  },
+};
+
+// export { api };
+
+async function processStreamingResponse(
+  body: ReadableStream,
+  onStreamChunk: (chunk: StreamEvent) => void
+): Promise<void> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  const processStream = async (): Promise<void> => {
+    const { value, done } = await reader.read();
+
+    if (done) {
+      // Process any remaining data in buffer
+      if (buffer) {
+        try {
+          const event = JSON.parse(buffer) as StreamEvent;
+          onStreamChunk(event);
+        } catch (e) {
+          console.error("Error parsing final stream chunk:", e);
+        }
+      }
+      return;
+    }
+
+    // Decode the chunk and add it to our buffer
+    const decodedValue = decoder.decode(value, { stream: true }); // Decoded value
+    buffer += decodedValue;
+
+    // Process complete JSON objects in buffer
+    let newlineIndex;
+    while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+      const line = buffer.slice(0, newlineIndex).trim();
+      buffer = buffer.slice(newlineIndex + 1);
+
+      if (line) {
+        try {
+          const event = JSON.parse(line) as StreamEvent;
+          onStreamChunk(event);
+        } catch (e) {
+          console.error("Error parsing stream chunk:", e, line);
+        }
       }
     }
-  } finally {
-    reader.releaseLock();
-  }
-}
 
-// Export the API client from the api/index.ts file
-// export default api;
+    return processStream();
+  };
+
+  await processStream();
+}
