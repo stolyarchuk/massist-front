@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { Env } from "../src/utils/types";
+import { Bindings } from "../src/utils/types";
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Bindings }>();
 
 app.get("/api/", async (c) => {
   return c.json({ name: "Cloudflare" });
