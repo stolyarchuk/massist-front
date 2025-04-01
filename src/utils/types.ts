@@ -25,10 +25,10 @@ export interface ChatResponse {
   initial_message?: string;
 }
 
-export interface Env {
+export type Bindings = {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
 
   API_URL: string;
-}
+};

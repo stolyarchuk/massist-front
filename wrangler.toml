@@ -22,7 +22,7 @@ API_URL = "http://127.0.0.1:8000"
 API_URL = "http://127.0.0.1:8000"
 
 [env.prod.vars]
-API_URL = "https://api.llmx.io"
+API_URL = "https://api.llmx.io/v1"
 
 [placement]
 mode = "smart"
