@@ -20,7 +20,14 @@
     "directory": "./public/"
   },
   "vars": {
-    "API_URL": "http://your-api-url"
+    "API_URL": "http://127.0.0.1:8000"
+  },
+  "env": {
+    "devel": {
+      "vars": {
+        "API_URL": null
+      }
+    }
   },
   /**
 	 * Smart Placement

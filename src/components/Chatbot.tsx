@@ -4,8 +4,8 @@ import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
 import { parseSSEStream } from "../utils/helpers.ts";
-import api from "../../api/index.ts";
-import { ChatMessage, ChatResponse } from "../../api/types.ts";
+import { api } from "../utils/api.ts";
+import { ChatMessage, ChatResponse } from "../utils/types.ts";
 
 import { extractContentFromRunResponse } from "../utils/helpers.ts";
 

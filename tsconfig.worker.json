@@ -7,8 +7,5 @@
       "vite/client",
       "./worker-configuration.d.ts"
     ]
-  },
-  "include": [
-    "api"
-  ]
+  }
 }
