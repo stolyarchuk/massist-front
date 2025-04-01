@@ -37,8 +37,6 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    console.log("initializeChat");
-
     try {
       const chatData = (await api.createChat()) as ChatResponse;
 
@@ -66,12 +64,9 @@ const Chatbot: React.FC = () => {
 
   // Initialize chat on component mount
   useEffect(() => {
-    console.log("useEffect");
-
     const storedChatId = getChatIdFromCookie();
     if (storedChatId) {
-      console.info("has storedChatId");
-      // setChatId(storedChatId);
+      setChatId(storedChatId);
       // fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
@@ -119,9 +114,9 @@ const Chatbot: React.FC = () => {
   };
 
   const submitNewMessage = async () => {
-    if (!newMessage.trim() || isLoading) return;
-
     const trimmedMessage = newMessage.trim();
+
+    if (!trimmedMessage || isLoading) return;
 
     // Clear input and add user message
     addMessage("user", trimmedMessage);
@@ -141,8 +136,7 @@ const Chatbot: React.FC = () => {
       }
 
       // Handle streaming response
-      // if (responseStream instanceof ReadableStream) {
-      if (responseStream === null) {
+      if (responseStream instanceof ReadableStream) {
         // Add initial empty assistant message that will be updated
         addMessage("assistant", "");
 

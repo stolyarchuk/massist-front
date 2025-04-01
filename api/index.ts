@@ -39,40 +39,15 @@ declare module "hono" {
   }
 }
 
-api.get("/api/", (c) => c.json({ name: "Cloudflare" }));
+api.get("/api/", async (c) => {
+  return c.json({ name: "Cloudflare" });
+});
 
 api.get("*", async (c) => {
   return await c.env.ASSETS.fetch(c.req.raw);
 });
 
-api.post("/api/chat/:chat_id", async (c) => {
-  console.log("c.env.API_URL /api/chat/:chat_id", c.env.API_URL);
-  console.log("c.env.ASSETS /api/chat/:chat_id", c.env.ASSETS);
-
-  const request = c.req.raw;
-  const url = new URL(request.url);
-
-  if (url.pathname.startsWith("/api/")) {
-    const backendUrl = new URL(
-      url.pathname.replace("/api", "http://127.0.0.1:8000")
-    );
-
-    console.log("backendUrl", backendUrl.toString());
-
-    return await fetch(new Request(backendUrl.toString()), {
-      headers: request.headers,
-      method: "POST",
-      body: request.body,
-    });
-  }
-
-  return c.env.ASSETS.fetch(c.req.raw);
-});
-
 api.post("/api/chat/new", async (c) => {
-  console.log("c.env.API_URL /api/chat/new", c.env.API_URL);
-  console.log("c.env.ASSETS /api/chat/new", c.env.ASSETS);
-
   const req = c.req.raw;
   const url = new URL(req.url);
 
@@ -81,20 +56,35 @@ api.post("/api/chat/new", async (c) => {
       url.pathname.replace("/api", "http://127.0.0.1:8000")
     );
 
-    console.log("backendUrl", backendUrl.toString());
-
     return await fetch(new Request(backendUrl.toString()), {
       headers: req.headers,
       method: "POST",
     });
   }
 
-  return c.env.ASSETS.fetch(c.req.raw);
+  return await c.env.ASSETS.fetch(c.req.raw);
+});
+
+api.post("/api/chat/:chat_id", async (c) => {
+  const request = c.req.raw;
+  const url = new URL(request.url);
+
+  if (url.pathname.startsWith("/api/")) {
+    const backendUrl = new URL(
+      url.pathname.replace("/api", "http://127.0.0.1:8000")
+    );
+
+    return await fetch(new Request(backendUrl.toString()), {
+      headers: request.headers,
+      method: "POST",
+      body: request.body,
+    });
+  }
+
+  return await c.env.ASSETS.fetch(c.req.raw);
 });
 
 api.createChat = async (): Promise<ChatResponse> => {
-  console.log("createChat");
-
   try {
     const response = await fetch(`/api/chat/new`, {
       method: "POST",
@@ -107,15 +97,6 @@ api.createChat = async (): Promise<ChatResponse> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // console.log("response", response);
-
-    // Handle streaming response
-    // if (response.body) {
-    //   await processStreamingResponse(response.body, onStreamChunk);
-    //   // return null;
-    // }
-
-    // For non-streaming responses, return the body as before
     return await response.json();
   } catch (error) {
     console.error("Error sending message:", error);
@@ -128,9 +109,6 @@ api.sendChatMessage = async (
   message: string,
   onStreamChunk?: (chunk: StreamEvent) => void
 ): Promise<ReadableStream | null> => {
-  console.log("sendChatMessage", chatId);
-  console.log("sendChatMessage env");
-
   try {
     const response = await fetch(`/api/chat/${chatId}`, {
       method: "POST",
@@ -143,8 +121,6 @@ api.sendChatMessage = async (
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    console.log(response);
 
     // Handle streaming response
     if (onStreamChunk && response.body) {
@@ -209,6 +185,5 @@ async function processStreamingResponse(
 
   await processStream();
 }
-
 
 export default api;
