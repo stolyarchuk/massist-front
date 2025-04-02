@@ -1,100 +1,74 @@
-import { Hono } from "hono";
-import { Bindings } from "../src/utils/types";
+import { Hono, Context, Next } from "hono";
+import { Env } from "../src/utils/types";
+import { cors } from "hono/cors";
 
-const app = new Hono<{ Bindings: Bindings }>();
+type Variables = {
+  remote_url: URL;
+};
 
-app.get("/api/", async (c) => {
-  return c.json({ name: "Cloudflare" });
+type HonoConf = { Bindings: Env; Variables: Variables };
+
+const remoteUrlMiddleware = async (c: Context, next: Next) => {
+  const path = c.req.path.startsWith("/api")
+    ? c.req.path.substring(4)
+    : c.req.path;
+
+  c.set("remote_url", new URL("/v1" + path, c.env.API_URL));
+  await next();
+};
+
+const app = new Hono<HonoConf>();
+
+// app.use(
+//   "*",
+//   cors({
+//     origin: (origin, c) => {
+//       return origin.endsWith(".llmx.io") ? origin : "https://llmx.io";
+//     },
+//   })
+// );
+
+app.use("*", remoteUrlMiddleware);
+app.get("*", (c) => c.env.ASSETS.fetch(c.req.raw));
+
+app.get("/api/*", async (c) => {
+  return await fetch(c.get("remote_url"), {
+    headers: c.req.raw.headers,
+    method: c.req.raw.method,
+    body: c.req.raw.body,
+  });
 });
 
-app.get("*", async (c) => {
-  return await c.env.ASSETS.fetch(c.req.raw);
+app.post("/api/*", async (c) => {
+  return await fetch(c.get("remote_url"), {
+    headers: c.req.raw.headers,
+    method: c.req.raw.method,
+    body: c.req.raw.body,
+  });
 });
 
-app.post("/api/chat/new", async (c) => {
-  const request = c.req.raw;
-  const url = new URL(request.url);
+/* app.get("/api/messages/:chat_id", async (c) => {
+  return await fetch(c.get("remote_url"), {
+    headers: c.req.raw.headers,
+    method: c.req.raw.method,
+    body: c.req.raw.body,
+  });
+}); */
 
-  if (url.pathname.startsWith("/api/")) {
-    const backendUrl = new URL(url.pathname.replace("/api", c.env.API_URL));
-
-    return await fetch(new Request(backendUrl), {
-      headers: request.headers,
-      method: request.method,
-      body: request.body,
-    });
-  }
-
-  return await c.env.ASSETS.fetch(c.req.raw);
+/* app.post("/api/chat/new", async (c) => {
+  return await fetch(c.get("remote_url"), {
+    headers: c.req.raw.headers,
+    method: c.req.raw.method,
+    body: c.req.raw.body,
+  });
 });
 
 app.post("/api/chat/:chat_id", async (c) => {
-  const request = c.req.raw;
-  const url = new URL(request.url);
-
-  if (url.pathname.startsWith("/api/")) {
-    const backendUrl = new URL(url.pathname.replace("/api", c.env.API_URL));
-
-    return await fetch(backendUrl, {
-      headers: request.headers,
-      method: request.method,
-      body: request.body,
-    });
-  }
-
-  return await c.env.ASSETS.fetch(c.req.raw);
-});
-
-/* app.createChat = async (): Promise<ChatResponse> => {
-  try {
-    const response = await fetch(`/api/chat/new`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error sending message:", error);
-    throw error;
-  }
-};
-
-app.sendChatMessage = async (
-  chatId: string | "new",
-  message: string,
-  onStreamChunk?: (chunk: StreamEvent) => void
-): Promise<ReadableStream | null> => {
-  try {
-    const response = await fetch(`/api/chat/${chatId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    // Handle streaming response
-    if (onStreamChunk && response.body) {
-      await processStreamingResponse(response.body, onStreamChunk);
-      return null;
-    }
-
-    // For non-streaming responses, return the body as before
-    return response.body;
-  } catch (error) {
-    console.error("Error sending message:", error);
-    throw error;
-  }
-}; */
+  return await fetch(c.get("remote_url"), {
+    headers: c.req.raw.headers,
+    method: c.req.raw.method,
+    body: c.req.raw.body,
+  });
+}); */
 
 export default app;

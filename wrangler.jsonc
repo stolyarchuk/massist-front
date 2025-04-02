@@ -6,11 +6,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "massist-front",
   "main": "api/index.ts",
-  "compatibility_date": "2025-03-17",
+  "compatibility_date": "2025-03-10",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "upload_source_maps": true,
+  // "upload_source_maps": true,
   "observability": {
     "enabled": true
   },
@@ -20,14 +20,7 @@
     "directory": "./public/"
   },
   "vars": {
-    "API_URL": "http://127.0.0.1:8000"
-  },
-  "env": {
-    "devel": {
-      "vars": {
-        "API_URL": null
-      }
-    }
+    "API_URL": "https://api.llmx.io/v1"
   },
   /**
 	 * Smart Placement
