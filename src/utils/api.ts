@@ -1,16 +1,32 @@
-import { ChatResponse, StreamEvent } from "./types.ts";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { StreamEvent } from "./types.ts";
 
 export const api = {
+  getTestie: async (): Promise<Response> => {
+    try {
+      const response = await fetch("/api/teste", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Error creating chat:", error);
+      throw error;
+    }
+  },
+
   /**
    * Create a new chat session
    */
-  createChat: async (): Promise<ChatResponse> => {
-    console.log("API_URL", API_URL);
+  createChat: async (): Promise<Response> => {
+    console.log("1");
 
     try {
-      const response = await fetch(`${API_URL}/chat/new`, {
+      const response = await fetch("/api/chat/new", {
+        // mode: "no-cors",
         method: "POST",
       });
 
@@ -29,18 +45,20 @@ export const api = {
    * Send a message to a chat session with optional streaming support
    */
   sendChatMessage: async (
-    chatIdOrNew: string,
+    chatId: string,
     message: string,
     onStreamChunk?: (chunk: StreamEvent) => void
   ): Promise<ReadableStream | null> => {
     try {
-      const response = await fetch(`${API_URL}/chat/${chatIdOrNew}`, {
+      const response = await fetch(`/api/chat/${chatId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ message }),
       });
+
+      console.log("rrr", response);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -52,6 +70,8 @@ export const api = {
         return null;
       }
 
+      console.log("qqqq", response);
+
       // For non-streaming responses, return the body as before
       return response.body;
     } catch (error) {
@@ -60,8 +80,6 @@ export const api = {
     }
   },
 };
-
-// export { api };
 
 async function processStreamingResponse(
   body: ReadableStream,

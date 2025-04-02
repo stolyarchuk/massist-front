@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
 import ChatMessages from "./ChatMessages.tsx";
 import ChatError from "./ChatError.tsx";
-import { parseSSEStream } from "../utils/helpers.ts";
 import { api } from "../utils/api.ts";
 import { ChatMessage, ChatResponse } from "../utils/types.ts";
 
-import { extractContentFromRunResponse } from "../utils/helpers.ts";
+import {
+  extractContentFromRunResponse,
+  parseSSEStream,
+} from "../utils/helpers.ts";
 
 // Cookie utility functions
 const setChatIdCookie = (chatId: string) => {
@@ -25,13 +27,12 @@ const getChatIdFromCookie = () => {
   return null;
 };
 
-const Chatbot: React.FC = () => {
+const Chatbot: FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // const bottomRef = useRef<HTMLDivElement>(null);
 
   const initializeChat = useCallback(async () => {
     setIsLoading(true);
@@ -62,31 +63,35 @@ const Chatbot: React.FC = () => {
     }
   }, [setMessages]);
 
+  const fetchPreviousMessages = useCallback(
+    async (chatId: string) => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/messages?chat_id=${chatId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMessages(data.messages || []);
+        }
+      } catch (error) {
+        console.error("Error fetching previous messages:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setMessages]
+  );
+
   // Initialize chat on component mount
   useEffect(() => {
+    console.log("useEffect");
     const storedChatId = getChatIdFromCookie();
     if (storedChatId) {
       setChatId(storedChatId);
-      // fetchPreviousMessages(storedChatId);
+      fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
     }
-  }, [initializeChat]); // Empty dependency array to run only once on mount
-
-  // const fetchPreviousMessages = async (chatId: string) => {
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await fetch(`/api/messages?chat_id=${chatId}`);
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       setMessages(data.messages || []);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching previous messages:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+  }, [initializeChat, fetchPreviousMessages]); // Empty dependency array to run only once on mount
 
   const addMessage = (role: "user" | "assistant", content: string) => {
     setMessages((prev) => [...prev, { role, content }]);
@@ -130,6 +135,8 @@ const Chatbot: React.FC = () => {
         chatId || "new",
         trimmedMessage
       );
+
+      console.log("typeof responseStream", typeof responseStream);
 
       if (!responseStream) {
         throw new Error("No response stream received");
