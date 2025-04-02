@@ -22,11 +22,8 @@ export const api = {
    * Create a new chat session
    */
   createChat: async (): Promise<Response> => {
-    console.log("1");
-
     try {
       const response = await fetch("/api/chat/new", {
-        // mode: "no-cors",
         method: "POST",
       });
 
@@ -58,8 +55,6 @@ export const api = {
         body: JSON.stringify({ message }),
       });
 
-      console.log("rrr", response);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -69,8 +64,6 @@ export const api = {
         await processStreamingResponse(response.body, onStreamChunk);
         return null;
       }
-
-      console.log("qqqq", response);
 
       // For non-streaming responses, return the body as before
       return response.body;

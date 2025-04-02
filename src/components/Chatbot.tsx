@@ -63,35 +63,41 @@ const Chatbot: FC = () => {
     }
   }, [setMessages]);
 
-  const fetchPreviousMessages = useCallback(
-    async (chatId: string) => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/messages?chat_id=${chatId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setMessages(data.messages || []);
-        }
-      } catch (error) {
-        console.error("Error fetching previous messages:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [setMessages]
-  );
+  // const fetchPreviousMessages = useCallback(
+  //   async (chatId: string) => {
+  //     setIsLoading(true);
+  //     try {
+  //       const response = await fetch(`/api/messages/${chatId}`);
+  //       if (response.ok) {
+  //         const data = await response.json();
+
+  //         console.log(data);
+  //         console.log("parsed", JSON.parse(data));
+
+  //         setMessages(data || []);
+
+  //         // JSON.parse;
+  //         // setMessages((prev) => [...prev, { role, content }]);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching previous messages:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   },
+  //   [setMessages]
+  // );
 
   // Initialize chat on component mount
   useEffect(() => {
-    console.log("useEffect");
     const storedChatId = getChatIdFromCookie();
     if (storedChatId) {
       setChatId(storedChatId);
-      fetchPreviousMessages(storedChatId);
+      // fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
     }
-  }, [initializeChat, fetchPreviousMessages]); // Empty dependency array to run only once on mount
+  }, [initializeChat]); // Empty dependency array to run only once on mount
 
   const addMessage = (role: "user" | "assistant", content: string) => {
     setMessages((prev) => [...prev, { role, content }]);
@@ -135,8 +141,6 @@ const Chatbot: FC = () => {
         chatId || "new",
         trimmedMessage
       );
-
-      console.log("typeof responseStream", typeof responseStream);
 
       if (!responseStream) {
         throw new Error("No response stream received");
