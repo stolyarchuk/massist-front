@@ -16,20 +16,56 @@
       content="Mitigator AI Assistant — это виртуальный помощник, работающий на основе LLM-агентов, предназначенный для решения задач, связанных с Mitigator."
     />
     <meta property="og:url" content="https://massist.llmx.io" />
-    <meta property="og:site_name" content="Mitigator AI Assistant" />
+    <meta property="og:site_name" content="MitigatorAI" />
     <meta property="og:type" content="website" />
     <!-- <meta property="og:image" content="" /> -->
     <!-- Twitter Card Metadata -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Mitigator AI Assistant" />
+    <meta name="twitter:title" content="MitigatorAI" />
     <meta
       name="twitter:description"
       content="Mitigator AI Assistant — это виртуальный помощник, работающий на основе LLM-агентов, предназначенный для решения задач, связанных с Mitigator."
     />
     <!-- <meta name="twitter:image" content="" /> -->
+    <style>
+      /* Ensure header title has flexible positioning */
+      .header-title {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 0 1rem;
+        position: relative;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Add scroll event listener to change header appearance when scrolled
+      document.addEventListener("DOMContentLoaded", function () {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const header = document.querySelector(".header-title");
+            if (header) {
+              if (entries[0].isIntersecting) {
+                header.classList.remove("background");
+              } else {
+                header.classList.add("background");
+              }
+            }
+          },
+          { threshold: 0.1 }
+        );
+
+        // Add a small delay to ensure React has rendered the components
+        setTimeout(() => {
+          const header = document.querySelector(".header-title");
+          if (header) {
+            observer.observe(header);
+          }
+        }, 1000);
+      });
+    </script>
   </body>
 </html>

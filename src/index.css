@@ -66,4 +66,17 @@
   .markdown-container > :last-child {
     @apply mb-0;
   }
+
+  /* Header background effect */
+  .header-title {
+    @apply transition-all duration-300;
+  }
+
+  .header-title.background {
+    @apply text-gray-200 z-0;
+  }
+
+  .messages-container {
+    @apply relative z-10;
+  }
 }
