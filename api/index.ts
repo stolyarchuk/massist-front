@@ -1,6 +1,6 @@
 import { Hono, Context, Next } from "hono";
 import { Env } from "../src/utils/types";
-import { cors } from "hono/cors";
+// import { cors } from "hono/cors";
 
 type Variables = {
   remote_url: URL;
@@ -22,7 +22,7 @@ const app = new Hono<HonoConf>();
 // app.use(
 //   "*",
 //   cors({
-//     origin: (origin, c) => {
+//     origin: (origin) => {
 //       return origin.endsWith(".llmx.io") ? origin : "https://llmx.io";
 //     },
 //   })
