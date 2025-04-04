@@ -13,14 +13,16 @@ import {
 
 // Cookie utility functions
 const setChatIdCookie = (chatId: string) => {
-  document.cookie = `chat_id=${chatId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days expiry
+  document.cookie = `ma_chat_id=${chatId}; path=/; max-age=${
+    60 * 60 * 24 * 30
+  }`; // 30 days expiry
 };
 
 const getChatIdFromCookie = () => {
   const cookies = document.cookie.split(";");
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split("=");
-    if (name === "chat_id") {
+    if (name === "ma_chat_id") {
       return value;
     }
   }
