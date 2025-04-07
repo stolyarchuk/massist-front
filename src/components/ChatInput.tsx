@@ -37,7 +37,7 @@ const ChatInput = ({
           />
           <div className="absolute top-1/2 -translate-y-1/2 right-3">
             <button
-              className="p-1 rounded-md bg-transparent hover:bg-primary-blue/20 dark:hover:bg-dark-primary/30 dark:text-dark-text disabled:opacity-40 disabled:cursor-not-allowed dark:disabled:text-dark-text/40 group relative transition-all duration-200"
+              className="p-1 rounded-md bg-white dark:bg-dark-surface text-primary-blue dark:text-dark-primary hover:text-primary-blue/80 dark:hover:text-dark-primary/80 disabled:opacity-40 disabled:cursor-not-allowed dark:disabled:text-dark-text/40 group relative transition-all duration-200"
               onClick={submitNewMessage}
               disabled={isLoading || !newMessage.trim()}
             >
@@ -51,8 +51,8 @@ const ChatInput = ({
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                <path d="M22 2L11 13"></path>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
               </svg>
               <span className="absolute -top-10 right-0 bg-gray-700 dark:bg-dark-surface text-white dark:text-dark-text text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                 Send message
