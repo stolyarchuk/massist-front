@@ -39,6 +39,27 @@
       @apply bg-dark-primary/60 border-dark-surface rounded;
     }
   }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    @apply bg-white dark:bg-dark-background;
+  }
+
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Ensure consistent background color when scrolling */
+:root {
+  @apply bg-white;
+}
+
+:root.dark {
+  @apply bg-dark-background;
 }
 
 @layer components {

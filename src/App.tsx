@@ -18,6 +18,9 @@ function App() {
       document.documentElement.classList.add("light");
     }
 
+    // Set the background color on the body element for consistent scrolling
+    document.body.className = darkMode ? "bg-dark-background" : "bg-white";
+
     // Save theme preference to localStorage
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
   }, [darkMode]);
@@ -36,7 +39,7 @@ function App() {
             </h1>
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-dark-primary dark:hover:bg-dark-primary/80"
+              className="p-2 rounded-md bg-primary-blue/10 hover:bg-primary-blue/20 text-primary-blue dark:bg-dark-primary/20 dark:hover:bg-dark-primary/30 dark:text-dark-primary transition-colors duration-200"
               aria-label="Toggle theme"
             >
               {darkMode ? (
