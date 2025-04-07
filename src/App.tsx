@@ -18,6 +18,9 @@ function App() {
       document.documentElement.classList.add("light");
     }
 
+    // Set the background color on the body element for consistent scrolling
+    document.body.className = darkMode ? "bg-dark-background" : "bg-white";
+
     // Save theme preference to localStorage
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
   }, [darkMode]);

@@ -22,7 +22,10 @@ const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
     !messages.some((msg) => msg.role === "assistant" && msg.content === "");
 
   return (
-    <div ref={scrollContentRef} className="grow space-y-4">
+    <div
+      ref={scrollContentRef}
+      className="grow space-y-4 bg-white dark:bg-dark-background"
+    >
       {/* <div className=""> */}
       {messages.map((message, idx) => (
         <Message
