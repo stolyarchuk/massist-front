@@ -27,7 +27,7 @@ const ChatInput = ({
       <div className="p-1.5 bg-primary-blue/35 dark:bg-dark-primary/25 rounded-md z-50 font-mono origin-bottom animate-chat duration-400">
         <div className="pr-0.5 bg-white dark:bg-dark-surface relative shrink-0 rounded-md overflow-hidden ring-primary-blue dark:ring-dark-primary/50 ring-1 focus-within:ring-2 transition-all">
           <textarea
-            className="block w-full max-h-[140px] py-2 px-4 pr-11 bg-white dark:bg-dark-surface dark:text-dark-text rounded-md resize-none placeholder:text-primary-blue dark:placeholder:text-dark-primary/70 placeholder:leading-4 placeholder:-translate-y-1 sm:placeholder:leading-normal sm:placeholder:translate-y-0 focus:outline-none"
+            className="block w-full max-h-[140px] py-2 px-4 pr-11 bg-white dark:bg-dark-surface dark:text-dark-text rounded-md resize-none placeholder:text-primary-blue dark:placeholder:text-dark-primary/70 placeholder:leading-normal placeholder:align-middle focus:outline-none"
             ref={textareaRef}
             rows={1}
             value={newMessage}
