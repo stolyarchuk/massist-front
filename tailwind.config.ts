@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
     container: {
       center: true,
@@ -19,6 +20,16 @@ export default {
         "primary-orange": "rgb(243, 195, 177)",
         "main-text": "rgb(0, 43, 49)",
         "error-red": "rgb(208, 69, 82)",
+
+        // Dark theme colors from mitigator.ru
+        dark: {
+          background: "#1e2332",
+          surface: "#242b3d",
+          primary: "#3d8bfd",
+          text: "#e1e7ef",
+          secondary: "#6c757d",
+          accent: "#ff6b35",
+        },
       },
       animation: {
         spinner: "spinner 1.5s linear infinite",

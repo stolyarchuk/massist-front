@@ -8,7 +8,7 @@ const Header: React.FC<HeaderProps> = ({
   title = "Mitigator AI Assistant",
 }) => {
   return (
-    <header className="py-4">
+    <header className="py-4 bg-white dark:bg-dark-background transition-colors">
       <h1 className="header-title text-2xl font-bold text-center">{title}</h1>
     </header>
   );
