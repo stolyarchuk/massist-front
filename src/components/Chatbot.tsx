@@ -169,7 +169,7 @@ const Chatbot: FC = () => {
               fullResponse += data.content;
               updateLastAssistantMessage(fullResponse);
             } else if (data && data.last_chunk) {
-              // fullResponse = data.content;
+              fullResponse = data.content || "";
               updateLastAssistantMessage(data.content);
             }
           } catch (error) {
