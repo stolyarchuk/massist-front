@@ -1,6 +1,6 @@
 import { Hono, Context, Next } from "hono";
-import { Env } from "../src/utils/types";
 import { cors } from "hono/cors";
+import { Env } from "../src/utils/types";
 
 type Variables = {
   remote_url: URL;
@@ -32,16 +32,36 @@ app.use("*", remoteUrlMiddleware);
 app.get("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 
 app.get("/api/*", async (c) => {
+  // Create a new Headers object from the original headers
+  const headers = new Headers();
+
+  // Copy all original headers
+  for (const [key, value] of c.req.raw.headers.entries()) {
+    headers.set(key, value);
+  }
+
+  headers.set("Authorization", `Bearer ${c.env.API_KEY}`);
+
   return await fetch(c.get("remote_url"), {
-    headers: c.req.raw.headers,
+    headers: headers,
     method: c.req.raw.method,
     body: c.req.raw.body,
   });
 });
 
 app.post("/api/*", async (c) => {
+  // Create a new Headers object from the original headers
+  const headers = new Headers();
+
+  // Copy all original headers
+  for (const [key, value] of c.req.raw.headers.entries()) {
+    headers.set(key, value);
+  }
+
+  headers.set("Authorization", `Bearer ${c.env.API_KEY}`);
+
   return await fetch(c.get("remote_url"), {
-    headers: c.req.raw.headers,
+    headers: headers,
     method: c.req.raw.method,
     body: c.req.raw.body,
   });
