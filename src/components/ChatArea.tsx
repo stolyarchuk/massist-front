@@ -8,12 +8,12 @@ interface Message {
   error?: boolean;
 }
 
-interface ChatMessagesProps {
+interface ChatAreaProps {
   messages: Message[];
   isLoading: boolean;
 }
 
-const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
+const ChatArea = ({ messages, isLoading }: ChatAreaProps) => {
   const scrollContentRef = useAutoScroll(isLoading);
 
   // Check if we need to show a loading message
@@ -26,7 +26,6 @@ const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
       ref={scrollContentRef}
       className="grow space-y-4 bg-white dark:bg-dark-background"
     >
-      {/* <div className=""> */}
       {messages.map((message, idx) => (
         <Message
           key={idx}
@@ -42,9 +41,8 @@ const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
       {showLoadingMessage && (
         <Message role="assistant" content="" loading={true} />
       )}
-      {/* </div> */}
     </div>
   );
 };
 
-export default ChatMessages;
+export default ChatArea;

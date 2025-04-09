@@ -1,7 +1,7 @@
 import { FC, useState, useEffect, useCallback } from "react";
 import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
-import ChatMessages from "./ChatMessages.tsx";
+import ChatArea from "./ChatArea.tsx";
 import ChatError from "./ChatError.tsx";
 import { api } from "../utils/api.ts";
 import { ChatMessage, ChatResponse } from "../utils/types.ts";
@@ -193,7 +193,7 @@ const Chatbot: FC = () => {
 
   return (
     <div className="relative grow flex flex-col gap-6 pt-6">
-      <ChatMessages
+      <ChatArea
         messages={messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
