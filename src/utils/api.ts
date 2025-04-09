@@ -1,23 +1,6 @@
 import { StreamEvent } from "./types.ts";
 
 export const api = {
-  getTestie: async (): Promise<Response> => {
-    try {
-      const response = await fetch("/api/teste", {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return response;
-    } catch (error) {
-      console.error("Error creating chat:", error);
-      throw error;
-    }
-  },
-
   /**
    * Create a new chat session
    */
@@ -25,6 +8,10 @@ export const api = {
     try {
       const response = await fetch("/api/chat/new", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Encoding": "deflate, gzip",
+        },
       });
 
       if (!response.ok) {
