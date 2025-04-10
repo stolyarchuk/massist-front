@@ -4,9 +4,10 @@ import Spinner from "./Spinner.tsx";
 import ChatError from "./ChatError.tsx";
 import userIcon from "../assets/images/user.svg";
 import assistantIcon from "../assets/images/assistant.png";
+import { ChatRole } from "../utils/types.ts";
 
 interface MessageProps {
-  role: "user" | "assistant";
+  role: ChatRole;
   content: string;
   loading?: boolean;
   error?: boolean;

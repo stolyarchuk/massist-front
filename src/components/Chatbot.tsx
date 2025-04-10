@@ -32,7 +32,10 @@ const getChatIdFromCookie = () => {
 const Chatbot: FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [newMessage, setNewMessage] = useImmer<ChatMessage>({
+    role: "user",
+    content: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,17 +44,19 @@ const Chatbot: FC = () => {
     setError(null);
 
     try {
-      const chatData = (await api.createChat()) as ChatResponse;
+      const chatData = await api.createChat();
 
       if (chatData) {
-        setChatId(chatData.chat_id || "undefined");
-        setChatIdCookie(chatData.chat_id || "undefined");
+        const chatId = chatData.chat_id || "new";
+        chatState.setChatId(chatId);
 
         setMessages(() => {
           return [
             {
               content:
-                chatData.initial_message || "Hello! How can I help you today?",
+                chatData.initial_message ||
+                import.meta.env.VITE_GREETING ||
+                "Hello! How can I help you today?",
               role: "assistant",
             },
           ];
@@ -131,16 +136,17 @@ const Chatbot: FC = () => {
 
     if (!trimmedMessage || isLoading) return;
 
-    // Clear input and add user message
     addMessage("user", trimmedMessage);
-    setNewMessage("");
+    setNewMessage((draft) => {
+      draft.content = "";
+    });
     setIsLoading(true);
     setError(null);
 
     try {
       // Send message to API
       const responseStream = await api.sendChatMessage(
-        chatId || "new",
+        chatState.getChatId() || "new",
         trimmedMessage
       );
 
@@ -211,7 +217,11 @@ const Chatbot: FC = () => {
       <ChatInput
         newMessage={newMessage}
         isLoading={isLoading}
-        setNewMessage={setNewMessage}
+        setNewMessage={(content: string) =>
+          setNewMessage((draft) => {
+            draft.content = content;
+          })
+        }
         submitNewMessage={submitNewMessage}
       />
     </div>
