@@ -27,6 +27,7 @@ dist-ssr
 .wrangler
 .dev.vars*
 
+.api
 .env*
 
 !.env.sample
