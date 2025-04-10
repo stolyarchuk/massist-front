@@ -9,7 +9,13 @@
   body,
   html,
   #root {
-    @apply text-main-text h-full;
+    @apply text-main-text h-full bg-white;
+  }
+
+  .dark body,
+  .dark html,
+  .dark #root {
+    @apply bg-dark-background text-dark-text;
   }
 
   ::-webkit-scrollbar {
@@ -22,16 +28,46 @@
 
   ::-webkit-scrollbar-track {
     @apply bg-transparent rounded;
+    .dark & {
+      @apply bg-dark-surface/30 rounded;
+    }
   }
 
   ::-webkit-scrollbar-thumb {
     @apply bg-primary-blue/50 border border-white rounded;
+    .dark & {
+      @apply bg-dark-primary/60 border-dark-surface rounded;
+    }
   }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    @apply bg-white dark:bg-dark-background;
+  }
+
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Ensure consistent background color when scrolling */
+:root {
+  @apply bg-white;
+}
+
+:root.dark {
+  @apply bg-dark-background;
 }
 
 @layer components {
   .spinner-child {
     @apply absolute -top-1 left-0 h-full w-full content-[''] rounded-full bg-primary-orange opacity-0;
+    .dark & {
+      @apply bg-dark-accent opacity-0;
+    }
   }
 
   .markdown-container p {
@@ -44,7 +80,10 @@
   h4,
   h5,
   h6 {
-    @apply font-bold mb-5;
+    @apply font-bold mb-5 text-main-text;
+    .dark & {
+      @apply text-dark-text;
+    }
   }
 
   .markdown-container li {
@@ -65,5 +104,75 @@
 
   .markdown-container > :last-child {
     @apply mb-0;
+  }
+
+  /* Header background effect */
+  .header-title {
+    @apply transition-all duration-300 text-white drop-shadow-[0_0_2px_rgba(59,130,246,0.5)];
+    text-shadow: 0 0 3px rgba(59, 130, 246, 0.3),
+      0 0 5px rgba(59, 130, 246, 0.2);
+  }
+
+  .header-title.background {
+    @apply text-gray-200 bg-white/90 backdrop-blur-sm z-0;
+    .dark & {
+      @apply text-dark-text bg-dark-background border-b border-dark-surface/70 backdrop-blur-sm;
+    }
+  }
+
+  .messages-container {
+    @apply relative z-10;
+  }
+
+  /* Light theme components */
+  .input-container {
+    @apply bg-gray-50 border border-gray-200;
+  }
+
+  .message-bubble {
+    @apply bg-gray-50 border border-gray-200;
+  }
+
+  .user-message {
+    @apply bg-primary-blue/10;
+  }
+
+  .assistant-message {
+    @apply bg-gray-50 text-main-text;
+  }
+
+  button {
+    @apply bg-primary-blue text-white hover:bg-primary-blue/80;
+  }
+
+  input,
+  textarea {
+    @apply bg-white border border-gray-200 text-main-text placeholder:text-gray-400;
+  }
+
+  /* Dark theme specific components */
+  .dark .input-container {
+    @apply bg-dark-surface border-dark-primary/30;
+  }
+
+  .dark .message-bubble {
+    @apply bg-dark-surface border-dark-primary/20;
+  }
+
+  .dark .user-message {
+    @apply bg-dark-primary/20;
+  }
+
+  .dark .assistant-message {
+    @apply bg-dark-surface text-dark-text;
+  }
+
+  .dark button {
+    @apply bg-dark-primary text-dark-text hover:bg-dark-primary/80;
+  }
+
+  .dark input,
+  .dark textarea {
+    @apply bg-dark-surface border-dark-primary/30 text-dark-text placeholder:text-dark-secondary/70;
   }
 }

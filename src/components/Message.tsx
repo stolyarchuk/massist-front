@@ -24,7 +24,7 @@ const Message: React.FC<MessageProps> = ({ role, content, loading, error }) => {
         <img className="h-[26px] w-[26px] shrink-0" src={userIcon} alt="user" />
       ) : (
         <img
-          className="h-[26px] w-[26px] shrink-0"
+          className="h-[26px] w-[26px] shrink-0 filter grayscale-[78%]"
           src={assistantIcon}
           alt="assistant"
         />

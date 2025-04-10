@@ -1,15 +1,36 @@
-import { useState, useEffect, useRef, useCallback, FC } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 import { useImmer } from "use-immer";
 import ChatInput from "./ChatInput.tsx";
-import ChatMessages from "./ChatMessages.tsx";
+import ChatArea from "./ChatArea.tsx";
 import ChatError from "./ChatError.tsx";
-import api from "../utils/api";
-import { parseSSEStream } from "../utils/api.ts";
-import { ChatMessage, ChatState } from "../utils/types.ts";
-import { extractContentFromRunResponse } from "../utils/helpers.ts";
+import { api } from "../utils/api.ts";
+import { ChatMessage, ChatResponse } from "../utils/types.ts";
+
+import {
+  extractContentFromRunResponse,
+  parseSSEStream,
+} from "../utils/helpers.ts";
+
+// Cookie utility functions
+const setChatIdCookie = (chatId: string) => {
+  document.cookie = `ma_chat_id=${chatId}; path=/; max-age=${
+    60 * 60 * 24 * 30
+  }`; // 30 days expiry
+};
+
+const getChatIdFromCookie = () => {
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split("=");
+    if (name === "ma_chat_id") {
+      return value;
+    }
+  }
+  return null;
+};
 
 const Chatbot: FC = () => {
-  const [chatState] = useImmer<ChatState>(new ChatState());
+  const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useImmer<ChatMessage>({
     role: "user",
@@ -17,7 +38,6 @@ const Chatbot: FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
 
   const initializeChat = useCallback(async () => {
     setIsLoading(true);
@@ -48,19 +68,43 @@ const Chatbot: FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [chatState, setMessages]);
+  }, [setMessages]);
+
+  // const fetchPreviousMessages = useCallback(
+  //   async (chatId: string) => {
+  //     setIsLoading(true);
+  //     try {
+  //       const response = await fetch(`/api/messages/${chatId}`);
+  //       if (response.ok) {
+  //         const data = await response.json();
+
+  //         console.log(data);
+  //         console.log("parsed", JSON.parse(data));
+
+  //         setMessages(data || []);
+
+  //         // JSON.parse;
+  //         // setMessages((prev) => [...prev, { role, content }]);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching previous messages:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   },
+  //   [setMessages]
+  // );
 
   // Initialize chat on component mount
   useEffect(() => {
-    const savedChatId = chatState.getChatIdFromCookie();
-    if (savedChatId) {
-      chatState.setChatId(savedChatId);
-      // If needed, you could fetch previous messages here
-      // fetchPreviousMessages(savedChatId);
+    const storedChatId = getChatIdFromCookie();
+    if (storedChatId) {
+      setChatId(storedChatId);
+      // fetchPreviousMessages(storedChatId);
     } else {
       initializeChat();
     }
-  }, [chatState, initializeChat]);
+  }, [initializeChat]); // Empty dependency array to run only once on mount
 
   const addMessage = (role: "user" | "assistant", content: string) => {
     setMessages((prev) => [...prev, { role, content }]);
@@ -88,7 +132,7 @@ const Chatbot: FC = () => {
   };
 
   const submitNewMessage = async () => {
-    const trimmedMessage = newMessage.content.trim();
+    const trimmedMessage = newMessage.trim();
 
     if (!trimmedMessage || isLoading) return;
 
@@ -131,7 +175,7 @@ const Chatbot: FC = () => {
               fullResponse += data.content;
               updateLastAssistantMessage(fullResponse);
             } else if (data && data.last_chunk) {
-              // fullResponse = data.content;
+              fullResponse = data.content || "";
               updateLastAssistantMessage(data.content);
             }
           } catch (error) {
@@ -154,25 +198,21 @@ const Chatbot: FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex-grow overflow-y-auto px-2 py-2">
-        <ChatMessages
-          messages={messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          }))}
-          isLoading={isLoading}
+    <div className="relative grow flex flex-col gap-6 pt-6">
+      <ChatArea
+        messages={messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }))}
+        isLoading={isLoading}
+      />
+
+      {error && (
+        <ChatError
+          message={error}
+          className="mt-2 px-3 py-2 rounded bg-red-50"
         />
-
-        {error && (
-          <ChatError
-            message={error}
-            className="mt-2 px-3 py-2 rounded bg-red-50"
-          />
-        )}
-
-        <div ref={bottomRef} />
-      </div>
+      )}
 
       <ChatInput
         newMessage={newMessage}

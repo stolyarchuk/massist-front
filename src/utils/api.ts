@@ -1,66 +1,112 @@
-import { EventSourceParserStream } from "eventsource-parser/stream";
-import { ChatResponse } from "./types";
+import { StreamEvent } from "./types.ts";
 
-export async function* parseSSEStream(stream: ReadableStream) {
-  const sseStream = stream
-    .pipeThrough(new TextDecoderStream())
-    .pipeThrough(new EventSourceParserStream());
-
-  const reader = sseStream.getReader();
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value.type === "event") {
-        yield value.data;
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
-
-const api = {
+export const api = {
   /**
-   * Creates a new chat session
+   * Create a new chat session
    */
-  createChat: async (): Promise<ChatResponse> => {
-    const response = await fetch("/api/chats", {
-      method: "POST",
-    });
+  createChat: async (): Promise<Response> => {
+    try {
+      const response = await fetch("/api/chat/new", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Encoding": "deflate, gzip",
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to create chat: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error creating chat:", error);
+      throw error;
     }
-
-    return (await response.json()) as Promise<ChatResponse>;
   },
 
   /**
-   * Sends a message to the chat API and returns a stream of responses
-   * @param chatId The ID of the chat session
-   * @param message The message content to send
+   * Send a message to a chat session with optional streaming support
    */
   sendChatMessage: async (
-    chatId: string | "new",
-    message: string
-  ): Promise<ReadableStream> => {
-    console.log("asdasdad", chatId);
+    chatId: string,
+    message: string,
+    onStreamChunk?: (chunk: StreamEvent) => void
+  ): Promise<ReadableStream | null> => {
+    try {
+      const response = await fetch(`/api/chat/${chatId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
 
-    const response = await fetch(`/api/chats/${chatId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ content: message }),
-    });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    if (!response.ok) {
-      throw new Error(`Failed to send message: ${response.statusText}`);
+      // Handle streaming response
+      if (onStreamChunk && response.body) {
+        await processStreamingResponse(response.body, onStreamChunk);
+        return null;
+      }
+
+      // For non-streaming responses, return the body as before
+      return response.body;
+    } catch (error) {
+      console.error("Error sending message:", error);
+      throw error;
     }
-
-    return response.body as ReadableStream;
   },
 };
 
-export default api;
+async function processStreamingResponse(
+  body: ReadableStream,
+  onStreamChunk: (chunk: StreamEvent) => void
+): Promise<void> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  const processStream = async (): Promise<void> => {
+    const { value, done } = await reader.read();
+
+    if (done) {
+      // Process any remaining data in buffer
+      if (buffer) {
+        try {
+          const event = JSON.parse(buffer) as StreamEvent;
+          onStreamChunk(event);
+        } catch (e) {
+          console.error("Error parsing final stream chunk:", e);
+        }
+      }
+      return;
+    }
+
+    // Decode the chunk and add it to our buffer
+    const decodedValue = decoder.decode(value, { stream: true }); // Decoded value
+    buffer += decodedValue;
+
+    // Process complete JSON objects in buffer
+    let newlineIndex;
+    while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+      const line = buffer.slice(0, newlineIndex).trim();
+      buffer = buffer.slice(newlineIndex + 1);
+
+      if (line) {
+        try {
+          const event = JSON.parse(line) as StreamEvent;
+          onStreamChunk(event);
+        } catch (e) {
+          console.error("Error parsing stream chunk:", e, line);
+        }
+      }
+    }
+
+    return processStream();
+  };
+
+  await processStream();
+}

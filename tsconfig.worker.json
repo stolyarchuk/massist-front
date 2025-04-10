@@ -7,13 +7,12 @@
       "DOM"
     ],
     "types": [
-      // "@cloudflare/workers-types",
       "vite/client",
       "./worker-configuration.d.ts"
     ]
   },
   "include": [
-    "api",
-    "src/utils/types.ts"
+    "vite.config.ts",
+    "api"
   ]
 }
