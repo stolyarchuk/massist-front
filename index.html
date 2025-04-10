@@ -87,6 +87,26 @@
             observer.observe(header);
           }
         }, 1000);
+
+        // Handle scrollbar opacity changes when scrolling
+        let scrollTimer;
+        const html = document.documentElement;
+
+        function showFullOpacityScrollbar() {
+          html.classList.add("scrolling");
+        }
+
+        function resetScrollbarOpacity() {
+          scrollTimer = setTimeout(() => {
+            html.classList.remove("scrolling");
+          }, 1000); // Reset after 1 second of no scrolling
+        }
+
+        window.addEventListener("scroll", function () {
+          clearTimeout(scrollTimer);
+          showFullOpacityScrollbar();
+          resetScrollbarOpacity();
+        });
       });
     </script>
   </body>

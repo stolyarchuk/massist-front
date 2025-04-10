@@ -20,10 +20,12 @@
 
   ::-webkit-scrollbar {
     @apply h-4 w-2;
+    display: block !important;
   }
 
   ::-webkit-scrollbar:horizontal {
-    @apply h-4 w-2;
+    @apply h-2 w-4;
+    display: block !important;
   }
 
   ::-webkit-scrollbar-track {
@@ -34,9 +36,52 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary-blue/50 border border-white rounded;
+    @apply bg-primary-blue/30 border border-white rounded transition-all duration-300;
     .dark & {
-      @apply bg-dark-primary/60 border-dark-surface rounded;
+      @apply bg-dark-primary/30 border-dark-surface rounded transition-all duration-300;
+    }
+  }
+
+  ::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:active {
+    @apply bg-primary-blue border border-white rounded;
+    .dark & {
+      @apply bg-dark-primary border-dark-surface rounded;
+    }
+  }
+
+  /* Apply full opacity to scrollbar when scrolling */
+  html.scrolling::-webkit-scrollbar-thumb {
+    @apply bg-primary-blue border border-white rounded;
+    .dark & {
+      @apply bg-dark-primary border-dark-surface rounded;
+    }
+  }
+
+  /* Mobile-specific scrollbar styles */
+  @media (max-width: 768px) {
+    ::-webkit-scrollbar {
+      @apply h-2 w-1.5;
+      display: block !important;
+    }
+
+    ::-webkit-scrollbar:horizontal {
+      @apply h-1.5 w-2;
+      display: block !important;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      @apply bg-primary-blue/30 border-0 rounded transition-all duration-300;
+      .dark & {
+        @apply bg-dark-primary/30 border-0 rounded transition-all duration-300;
+      }
+    }
+
+    html.scrolling::-webkit-scrollbar-thumb {
+      @apply bg-primary-blue border-0 rounded;
+      .dark & {
+        @apply bg-dark-primary border-0 rounded;
+      }
     }
   }
 
