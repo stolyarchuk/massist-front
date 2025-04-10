@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@react-nano/use-event-source": "^0.16.0",
+    "@twa-dev/sdk": "^8.0.2",
     "eventsource-parser": "^2.0.1",
     "hono": "^4.7.5",
     "react": "^19.0.0",
