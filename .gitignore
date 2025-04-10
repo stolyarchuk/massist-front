@@ -29,6 +29,7 @@ dist-ssr
 
 .*
 .env*
+.api*
 
 !.env.sample
 !.env.example

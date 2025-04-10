@@ -68,7 +68,7 @@ const ChatInput = ({
             value={newMessage.content}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Поменяйте на свой текст"
+            placeholder="Замените на свой текст..."
           />
           <div className="absolute top-1/2 -translate-y-1/2 right-1">
             <button
