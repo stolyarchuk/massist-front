@@ -32,10 +32,7 @@ const getChatIdFromCookie = () => {
 const Chatbot: FC = () => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useImmer<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useImmer<ChatMessage>({
-    role: "user",
-    content: "",
-  });
+  const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,19 +41,16 @@ const Chatbot: FC = () => {
     setError(null);
 
     try {
-      const chatData = await api.createChat();
+      const chatData = (await api.createChat()) as ChatResponse;
 
       if (chatData) {
-        const chatId = chatData.chat_id || "new";
-        chatState.setChatId(chatId);
+        setChatId(chatData.chat_id || "undefined");
+        setChatIdCookie(chatData.chat_id || "undefined");
 
         setMessages(() => {
           return [
             {
-              content:
-                chatData.initial_message ||
-                import.meta.env.VITE_GREETING ||
-                "Hello! How can I help you today?",
+              content: chatData.initial_message || "Привет! Как я могу помочь?",
               role: "assistant",
             },
           ];
@@ -136,17 +130,16 @@ const Chatbot: FC = () => {
 
     if (!trimmedMessage || isLoading) return;
 
+    // Clear input and add user message
     addMessage("user", trimmedMessage);
-    setNewMessage((draft) => {
-      draft.content = "";
-    });
+    setNewMessage("");
     setIsLoading(true);
     setError(null);
 
     try {
       // Send message to API
       const responseStream = await api.sendChatMessage(
-        chatState.getChatId() || "new",
+        chatId || "new",
         trimmedMessage
       );
 
@@ -217,11 +210,7 @@ const Chatbot: FC = () => {
       <ChatInput
         newMessage={newMessage}
         isLoading={isLoading}
-        setNewMessage={(content: string) =>
-          setNewMessage((draft) => {
-            draft.content = content;
-          })
-        }
+        setNewMessage={setNewMessage}
         submitNewMessage={submitNewMessage}
       />
     </div>

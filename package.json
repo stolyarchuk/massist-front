@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@react-nano/use-event-source": "^0.16.0",
-    "@twa-dev/sdk": "^8.0.2",
     "eventsource-parser": "^2.0.1",
     "hono": "^4.7.5",
     "react": "^19.0.0",
@@ -25,7 +24,8 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.18",
     "@eslint/js": "^9.17.0",
-    "@types/node": "^22.13.14",
+    "@telegram-apps/sdk-react": "^3.1.9",
+    "@twa-dev/sdk": "^8.0.2",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
