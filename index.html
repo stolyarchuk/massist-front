@@ -9,15 +9,23 @@
       name="description"
       content="Mitigator AI Assistant — это виртуальный помощник, работающий на основе LLM-агентов, предназначенный для решения задач, связанных с Mitigator."
     />
-    <!-- Open Graph Metadata -->
+    <!--
+    Open Graph Metadata Preview Tools:
+    1. Facebook Sharing Debugger: https://developers.facebook.com/tools/debug/
+    2. Twitter Card Validator: https://cards-dev.twitter.com/validator
+    3. LinkedIn Post Inspector: https://www.linkedin.com/post-inspector/
+    4. Open Graph Check: https://www.opengraph.xyz/
+
+    Use these tools to validate and preview how your links will appear when shared on social media.
+    -->
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content="https://massist.llmx.io/" />
+    <meta property="og:type" content="website" />
     <meta property="og:title" content="Mitigator AI Assistant | Bifit" />
     <meta
       property="og:description"
       content="Mitigator AI Assistant — это виртуальный помощник, работающий на основе LLM-агентов, предназначенный для решения задач, связанных с Mitigator."
     />
-    <meta property="og:url" content="https://massist.llmx.io" />
-    <meta property="og:site_name" content="MitigatorAI" />
-    <meta property="og:type" content="website" />
     <meta
       property="og:image"
       content="https://static.llmx.io/images/MITIGATOR.540p.png"
@@ -27,6 +35,8 @@
 
     <!-- Twitter Card Metadata -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="massist.llmx.io" />
+    <meta property="twitter:url" content="https://massist.llmx.io/" />
     <meta name="twitter:title" content="Mitigator AI Assistant | Bifit" />
     <meta
       name="twitter:description"
@@ -36,6 +46,8 @@
       name="twitter:image"
       content="https://static.llmx.io/images/MITIGATOR.540p.png"
     />
+
+    <!-- Meta Tags Generated via https://www.opengraph.xyz -->
     <!-- Updated theme color to dark theme -->
     <meta name="theme-color" content="#1e2332" />
     <!-- Ensure proper charset is defined early -->
@@ -77,6 +89,26 @@
             observer.observe(header);
           }
         }, 1000);
+
+        // Handle scrollbar opacity changes when scrolling
+        let scrollTimer;
+        const html = document.documentElement;
+
+        function showFullOpacityScrollbar() {
+          html.classList.add("scrolling");
+        }
+
+        function resetScrollbarOpacity() {
+          scrollTimer = setTimeout(() => {
+            html.classList.remove("scrolling");
+          }, 1000); // Reset after 1 second of no scrolling
+        }
+
+        window.addEventListener("scroll", function () {
+          clearTimeout(scrollTimer);
+          showFullOpacityScrollbar();
+          resetScrollbarOpacity();
+        });
       });
     </script>
   </body>

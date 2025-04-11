@@ -2,7 +2,7 @@ import useAutosize from "../hooks/useAutosize.ts";
 import { useEffect, useRef } from "react";
 
 interface ChatInputProps {
-  newMessage: string;
+  newMessage: ChatMessage;
   isLoading: boolean;
   setNewMessage: (message: string) => void;
   submitNewMessage: () => void;
@@ -65,7 +65,7 @@ const ChatInput = ({
               inputFocusRef.current = element;
             }}
             rows={1}
-            value={newMessage}
+            value={newMessage.content}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Замените на свой текст..."
