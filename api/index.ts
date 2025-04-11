@@ -36,11 +36,12 @@ app.get("/api/*", async (c) => {
   const headers = new Headers();
 
   // Copy all original headers
-  for (const [key, value] of c.req.raw.headers.entries()) {
-    headers.set(key, value);
-  }
+  // for (const [key, value] of c.req.raw.headers.entries()) {
+  //   headers.set(key, value);
+  // }
 
   headers.set("Authorization", `Bearer ${c.env.API_KEY}`);
+  headers.set("Content-type", "application/json");
 
   return await fetch(c.get("remote_url"), {
     headers: headers,
@@ -54,11 +55,12 @@ app.post("/api/*", async (c) => {
   const headers = new Headers();
 
   // Copy all original headers
-  for (const [key, value] of c.req.raw.headers.entries()) {
-    headers.set(key, value);
-  }
+  // for (const [key, value] of c.req.raw.headers.entries()) {
+  //   headers.set(key, value);
+  // }
 
   headers.set("Authorization", `Bearer ${c.env.API_KEY}`);
+  headers.set("Content-type", "application/json");
 
   return await fetch(c.get("remote_url"), {
     headers: headers,
