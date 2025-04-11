@@ -7,7 +7,7 @@ import assistantIcon from "../assets/images/assistant.png";
 import { ChatRole } from "../utils/types.ts";
 
 interface MessageProps {
-  role: ChatRole;
+  role: "user" | "assistant";
   content: string;
   loading?: boolean;
   error?: boolean;
