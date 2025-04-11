@@ -50,8 +50,7 @@ const Chatbot: FC = () => {
         setMessages(() => {
           return [
             {
-              content:
-                chatData.initial_message || "Hello! How can I help you today?",
+              content: chatData.initial_message || "Привет! Как я могу помочь?",
               role: "assistant",
             },
           ];

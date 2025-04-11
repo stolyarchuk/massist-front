@@ -20,8 +20,7 @@
     "directory": "./public/"
   },
   "vars": {
-    "API_URL": "http://localhost:8000/v1",
-    "API_KEY": "persistent-api-key"
+    "API_URL": "https://api-host.llmx.io/v1",
   },
   /**
 	 * Smart Placement
