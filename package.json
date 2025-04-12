@@ -24,7 +24,6 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.18",
     "@eslint/js": "^9.17.0",
-    "@telegram-apps/sdk-react": "^3.1.9",
     "@twa-dev/sdk": "^8.0.2",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
