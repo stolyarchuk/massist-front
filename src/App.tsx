@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import Chatbot from "./components/Chatbot.tsx";
 import Header from "./components/Header.tsx";
-import WebApp from "@twa-dev/sdk";
-
-WebApp.ready();
 
 function App() {
   // Initialize theme from localStorage or default to true (dark mode)
