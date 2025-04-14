@@ -24,7 +24,6 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.18",
     "@eslint/js": "^9.17.0",
-    "@twa-dev/sdk": "^8.0.2",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
@@ -40,5 +39,11 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.2",
     "wrangler": "^4.9.1"
-  }
+  },
+  "browserslist": [
+    "chrome >= 112",
+    "edge >= 112",
+    "firefox >= 113",
+    "safari >= 16.4"
+  ]
 }
