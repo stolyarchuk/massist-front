@@ -6,7 +6,7 @@ function App() {
   // Initialize theme from localStorage or default to true (dark mode)
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("darkMode");
-    return savedTheme !== null ? JSON.parse(savedTheme) : true;
+    return savedTheme !== null ? JSON.parse(savedTheme) : false;
   });
 
   useEffect(() => {
